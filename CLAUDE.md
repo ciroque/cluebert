@@ -21,7 +21,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented; partly superseded by ADR 9 |
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
 | [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted, implemented |
-| [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted |
+| [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted, import implemented |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,
@@ -69,6 +69,28 @@ One small PR per step, each independently reviewable.
      Correctly answered clues show a checkmark. The play order, current
      team and scores are visible, and the open clue is shown large. When
      the host starts a new game from game over, it switches to that game.
+
+### Next
+
+Steps 1–4 are done. The next PRs, in order:
+
+5. **Collections and JSON import** (ADR 9). `Collection` schema; boards are
+   unique by name within a collection, defaulting to "General".
+   `Cluebert.Boards.Import` (format in `docs/board-format.md`),
+   `mix cluebert.import`, and seeds from `priv/boards/*.json`.
+6. **Board management UI** (ADR 9). Create, edit, reorder and delete
+   collections, boards, categories and clues, plus a JSON upload page for
+   the deployed app.
+7. **Polish and cleanup.** Stop finished games an hour after they end
+   (later than the team carry-over and player-screen hand-off need).
+   Pre-select a different board than the one just played, add a
+   full-screen button on the player screen, and have the player screen
+   notice when its game process is gone.
+8. **ADR 10: no access control yet.** Record the decision and what would
+   make us revisit it.
+9. **Helm chart** for the existing Kubernetes cluster, following the
+   charts in the sibling repos. Exactly one replica, because game state is
+   in memory (ADR 4).
 
 ## Working agreements
 
