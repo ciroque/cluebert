@@ -62,6 +62,10 @@ defmodule CluebertWeb.BoardLiveTest do
       refute has_element?(view, "header")
     end
 
+    test "offers a full-screen button", %{view: view} do
+      assert has_element?(view, ~s(#fullscreen-button[phx-hook$="Fullscreen"]))
+    end
+
     test "is display only", %{view: view} do
       refute has_element?(view, "#board button")
       refute has_element?(view, "#end-game")

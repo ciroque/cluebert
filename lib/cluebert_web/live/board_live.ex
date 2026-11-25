@@ -3,7 +3,8 @@ defmodule CluebertWeb.BoardLive do
   The player screen for a game, at `/games/:id` (ADR 8): what the room sees,
   full-screen on a TV.
 
-  Display only. It shows the board with answered clues checked off, the play
+  Display only. A button in the corner puts the window into full screen,
+  and is hidden while it is (Esc leaves). It shows the board with answered clues checked off, the play
   order with scores and the current team, and the open clue's prompt
   covering the screen. Responses are never sent to this screen. It follows
   the game through `Cluebert.GameServer` broadcasts.
@@ -82,6 +83,24 @@ defmodule CluebertWeb.BoardLive do
         </div>
 
         <.board board={@board} game={@game} />
+
+        <button
+          id="fullscreen-button"
+          type="button"
+          phx-hook=".Fullscreen"
+          class="fixed right-4 bottom-4 z-30 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-medium text-blue-100 opacity-60 transition hover:bg-white/20 hover:opacity-100"
+        >
+          <.icon name="hero-arrows-pointing-out" class="size-5" /> Full screen
+        </button>
+        <script :type={Phoenix.LiveView.ColocatedHook} name=".Fullscreen">
+          export default {
+            mounted() {
+              this.el.addEventListener("click", () => {
+                document.documentElement.requestFullscreen?.().catch(() => {})
+              })
+            }
+          }
+        </script>
 
         <section
           :if={@game.open_clue}
