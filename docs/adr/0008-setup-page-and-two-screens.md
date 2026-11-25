@@ -44,10 +44,11 @@ Shuffle button.
 **Each game has two screens.** They are two views of the same `GameServer`,
 kept in sync by its broadcasts (ADR 1):
 
-- `/games/:id/host` (`HostLive`), on the host's device. It shows the board
-  with every clue's response, the play order and scores, and the current
-  team. The host clicks a clue to open it, then marks it Correct or Wrong on
-  that clue. End Game is always available (ADR 3).
+- `/games/:id/host` (`HostLive`), on the host's device. It shows the board,
+  the play order and scores, and the current team. The host clicks a clue to
+  open it. A panel then shows the clue's prompt and response, with Correct
+  and Incorrect buttons at its bottom right. End Game is always available
+  (ADR 3).
 - `/games/:id` (`BoardLive`), full-screen on the shared screen. It shows the
   same board and order without responses, with the open clue shown large.
   It is display-only.
