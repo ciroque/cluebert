@@ -18,9 +18,10 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0003](docs/adr/0003-host-judges-and-can-end-game-anytime.md) | The host judges, and can end the game at any time | Accepted, implemented |
 | [0004](docs/adr/0004-in-memory-game-state.md) | Game state lives only in memory | Accepted, implemented |
 | [0005](docs/adr/0005-board-snapshot-at-game-start.md) | The board is copied when a game starts | Accepted, implemented |
-| [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented |
+| [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented; partly superseded by ADR 9 |
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
-| [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted |
+| [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted, implemented |
+| [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,
