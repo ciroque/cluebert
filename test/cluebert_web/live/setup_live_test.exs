@@ -52,6 +52,7 @@ defmodule CluebertWeb.SetupLiveTest do
     test "says so when there are no boards, and cannot start", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
       add_team(view, "Red")
+      add_team(view, "Blue")
 
       assert has_element?(view, "#no-boards")
       assert has_element?(view, "#start-game[disabled]")
@@ -72,7 +73,7 @@ defmodule CluebertWeb.SetupLiveTest do
 
       assert has_element?(view, "#team-0", "Red")
       assert has_element?(view, "#team-1", "Blue")
-      refute has_element?(view, "#no-teams")
+      refute has_element?(view, "#teams-needed")
     end
 
     test "rejects duplicate and blank names", %{conn: conn} do
@@ -110,14 +111,30 @@ defmodule CluebertWeb.SetupLiveTest do
   end
 
   describe "starting" do
-    test "is disabled until there is a team", %{conn: conn} do
+    test "is disabled until there are two teams", %{conn: conn} do
       create_board("Apple")
       {:ok, view, _html} = live(conn, ~p"/")
 
       assert has_element?(view, "#start-game[disabled]")
+      assert has_element?(view, "#teams-needed")
 
       add_team(view, "Red")
+      assert has_element?(view, "#start-game[disabled]")
+      assert has_element?(view, "#teams-needed")
+
+      add_team(view, "Blue")
       refute has_element?(view, "#start-game[disabled]")
+      refute has_element?(view, "#teams-needed")
+    end
+
+    test "with one team, a forced start shows an error and starts nothing", %{conn: conn} do
+      create_board("Apple")
+      {:ok, view, _html} = live(conn, ~p"/")
+      add_team(view, "Red")
+
+      render_hook(view, "start", %{})
+
+      assert has_element?(view, "#flash-error", "Add at least 2 teams.")
     end
 
     test "starts a game with the teams and goes to its host screen", %{conn: conn} do
@@ -142,6 +159,7 @@ defmodule CluebertWeb.SetupLiveTest do
       {:ok, _} = Boards.create_board(%{name: Cluebert.DataCase.unique_board_name("Empty")})
       {:ok, view, _html} = live(conn, ~p"/")
       add_team(view, "Red")
+      add_team(view, "Blue")
 
       view |> element("#start-game") |> render_click()
 

@@ -21,6 +21,7 @@ defmodule CluebertWeb.SetupLive do
      |> assign(:boards, boards)
      |> assign(:board_id, boards |> List.first() |> then(&(&1 && &1.id)))
      |> assign(:teams, [])
+     |> assign(:min_teams, Game.min_teams())
      |> assign_team_form(%{"name" => ""})}
   end
 
@@ -71,8 +72,8 @@ defmodule CluebertWeb.SetupLive do
               </button>
             </li>
           </ol>
-          <p :if={@teams == []} id="no-teams" class="mt-2 text-sm text-zinc-500">
-            No teams yet. A single player is a team of one.
+          <p :if={length(@teams) < @min_teams} id="teams-needed" class="mt-2 text-sm text-zinc-500">
+            Add at least {@min_teams} teams to start. A single player is a team of one.
           </p>
         </section>
 
@@ -110,7 +111,7 @@ defmodule CluebertWeb.SetupLive do
         <.button
           id="start-game"
           phx-click="start"
-          disabled={@teams == [] or is_nil(@board_id)}
+          disabled={length(@teams) < @min_teams or is_nil(@board_id)}
           class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Start game <.icon name="hero-arrow-right" class="size-5" />
@@ -184,6 +185,6 @@ defmodule CluebertWeb.SetupLive do
   defp team_name_error(:duplicate_name), do: "That name is already taken"
 
   defp start_error(:invalid_board), do: "That board has no clues yet."
-  defp start_error(:no_teams), do: "Add at least one team."
+  defp start_error(:too_few_teams), do: "Add at least #{Game.min_teams()} teams."
   defp start_error(_reason), do: "The game could not be started."
 end
