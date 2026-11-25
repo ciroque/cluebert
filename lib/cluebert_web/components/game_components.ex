@@ -17,7 +17,7 @@ defmodule CluebertWeb.GameComponents do
   longest category, with empty cells below shorter ones (ADR 6).
 
   Each clue tile carries `data-state`: `available`, `locked` (another clue
-  is open, or the game is over), `open` or `answered` (dimmed to a 10% gray
+  is open, or the game is over), `open` or `answered` (dimmed to a 2% gray
   with a checkmark, so the clues still in play stand out). With `selectable`, available tiles are buttons that send a
   `"select"` event with the clue id as `phx-value-clue`.
   """
@@ -73,7 +73,7 @@ defmodule CluebertWeb.GameComponents do
       :if={@state == :answered}
       id={"clue-#{@clue.id}"}
       data-state="answered"
-      class="flex min-h-20 items-center justify-center rounded-lg bg-zinc-500/10 text-zinc-400"
+      class="flex min-h-20 items-center justify-center rounded-lg bg-zinc-500/2 text-zinc-400"
     >
       <.icon name="hero-check-circle-solid" class="size-8" />
       <span class="sr-only">Answered</span>
