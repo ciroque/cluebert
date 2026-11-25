@@ -6,21 +6,27 @@ defmodule CluebertWeb.SetupLive do
   here until Start and are checked with `Cluebert.Game.check_team_name/2`,
   so the naming rule stays in the rules module. Start creates a game that is
   already playing and goes to its host screen.
+
+  When the host comes here from a finished game (`/?from=<game id>`), its
+  teams are filled in, in the order they were entered, ready to edit or
+  clear. Start also announces the new game to that game's subscribers, so a
+  player screen still open on it switches to the new game.
   """
   use CluebertWeb, :live_view
 
   alias Cluebert.{Boards, Game, GameServer}
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     boards = Boards.list_boards()
 
     {:ok,
      socket
      |> assign(:page_title, "New game")
+     |> assign(:from, params["from"])
      |> assign(:boards, boards)
      |> assign(:board_id, boards |> List.first() |> then(&(&1 && &1.id)))
-     |> assign(:teams, [])
+     |> assign_carried_over_teams(params["from"])
      |> assign(:min_teams, Game.min_teams())
      |> assign_team_form(%{"name" => ""})}
   end
@@ -38,7 +44,26 @@ defmodule CluebertWeb.SetupLive do
 
       <div class="grid gap-8 md:grid-cols-2">
         <section id="teams-section" class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">Teams</h2>
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-sm font-semibold uppercase tracking-wide text-zinc-500">Teams</h2>
+            <button
+              :if={@teams != []}
+              id="clear-teams"
+              type="button"
+              phx-click="clear_teams"
+              class="cursor-pointer text-sm font-medium text-zinc-500 transition-colors hover:text-red-700"
+            >
+              Clear all
+            </button>
+          </div>
+          <p
+            :if={@carried_over}
+            id="teams-carried-over"
+            class="mb-3 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-900"
+          >
+            <.icon name="hero-arrow-path" class="size-4 shrink-0" />
+            Teams from the last game. Edit them or clear them for a new group.
+          </p>
 
           <.form
             for={@team_form}
@@ -146,6 +171,10 @@ defmodule CluebertWeb.SetupLive do
     end
   end
 
+  def handle_event("clear_teams", _params, socket) do
+    {:noreply, assign(socket, teams: [], carried_over: false)}
+  end
+
   def handle_event("remove_team", %{"index" => index}, socket) do
     {:noreply, update(socket, :teams, &List.delete_at(&1, String.to_integer(index)))}
   end
@@ -169,10 +198,28 @@ defmodule CluebertWeb.SetupLive do
 
     case GameServer.start_game(board_id, teams) do
       {:ok, id} ->
+        if from = socket.assigns.from, do: GameServer.announce_next_game(from, id)
         {:noreply, push_navigate(socket, to: ~p"/games/#{id}/host")}
 
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, start_error(reason))}
+    end
+  end
+
+  # Teams of the game the host came from, in the order they were entered
+  # (team ids count up), not the shuffled play order.
+  defp assign_carried_over_teams(socket, nil), do: assign(socket, teams: [], carried_over: false)
+
+  defp assign_carried_over_teams(socket, from) do
+    case GameServer.get(from) do
+      {:ok, %{game: game}} ->
+        teams =
+          game.teams |> Enum.sort_by(fn {id, _} -> id end) |> Enum.map(fn {_, t} -> t.name end)
+
+        assign(socket, teams: teams, carried_over: teams != [])
+
+      {:error, :not_found} ->
+        assign(socket, teams: [], carried_over: false)
     end
   end
 

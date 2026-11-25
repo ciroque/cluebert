@@ -53,14 +53,22 @@ kept in sync by its broadcasts (ADR 1):
   same board and order without responses, with the open clue shown large.
   It is display-only.
 
+**The player screen stays open between games.** When the host starts a new
+game from a finished one's game-over screen, the new game is announced on
+the old game's topic (`{:next_game, old_id, new_id}`), and the player screen
+switches to it by itself. The setup page fills in the finished game's teams,
+ready to edit or clear, since a group often plays again. The host screen's link to the player screen always
+targets one named window, so it reuses a window that is already open.
+
 **Correctly answered clues stay on the board with a checkmark.** They are not
 hidden. `Cluebert.Game` already tracks which clues are answered, so this
 needs no rule change. It does not record which team answered.
 
 ## Consequences
 
-- Two browser windows per game: usually a laptop with the TV as a second
-  display, or a phone plus the TV.
+- Two browser windows: usually a laptop with the TV as a second display, or
+  a phone plus the TV. The player window is set up once and follows the
+  host from game to game.
 - Several games can run at once, each under its own id. There is no access
   control: anyone with a host URL can run that game.
 - `GameServer` loses `add_team/2`, `remove_team/2` and `shuffle_order/2`,

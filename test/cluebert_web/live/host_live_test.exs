@@ -60,6 +60,16 @@ defmodule CluebertWeb.HostLiveTest do
       refute has_element?(view, "#open-clue")
     end
 
+    test "links to the player screen in the one shared player window", %{view: view, id: id} do
+      assert has_element?(
+               view,
+               ~s(#open-player-screen[href="/games/#{id}"][target="cluebert-player"])
+             )
+
+      # noopener would make browsers open a fresh window instead of reusing it.
+      refute has_element?(view, "#open-player-screen[rel]")
+    end
+
     test "shows the play order with scores and the current team", %{view: view} = ctx do
       assert has_element?(view, "#team-#{ctx.red}[aria-current=true]", "Red")
       assert has_element?(view, "#team-#{ctx.blue}[aria-current=false]", "Blue")
@@ -118,7 +128,7 @@ defmodule CluebertWeb.HostLiveTest do
       assert has_element?(view, "#final-standings #standing-#{blue}", "1. Blue")
       assert has_element?(view, "#final-standings #standing-#{red}", "2. Red")
       refute has_element?(view, "#end-game")
-      assert has_element?(view, "#new-game")
+      assert has_element?(view, ~s(#new-game[href="/?from=#{ctx.id}"]))
     end
 
     test "end game freezes the scores and shows the standings", %{view: view} = ctx do

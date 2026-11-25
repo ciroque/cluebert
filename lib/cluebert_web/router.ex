@@ -15,6 +15,7 @@ defmodule CluebertWeb.Router do
 
     live "/", SetupLive
     live "/games/:id/host", HostLive
+    live "/games/:id", BoardLive
   end
 
   # LiveDashboard is dev-only; it has no authentication.

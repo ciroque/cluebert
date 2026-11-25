@@ -5,12 +5,16 @@ defmodule CluebertWeb.HostLive do
   Shows the board, the play order with scores, and the current team. The
   host clicks the clue the current team calls out (ADR 2), sees its prompt
   and response, and marks it Correct or Incorrect (ADR 3). End Game
-  is always available until the game is over.
+  is always available until the game is over. A link opens the player
+  screen in a window named `cluebert-player`, for the host to move to the
+  shared display; every game's link reuses that window.
 
   Every change goes through `Cluebert.GameServer`; this view renders what it
   returns and what it broadcasts, so it stays in sync with other screens.
   """
   use CluebertWeb, :live_view
+
+  import CluebertWeb.GameComponents
 
   alias Cluebert.{Game, GameServer}
 
@@ -25,7 +29,6 @@ defmodule CluebertWeb.HostLive do
          |> assign(:page_title, "Host · #{board.name}")
          |> assign(:game_id, id)
          |> assign(:board, board)
-         |> assign(:rows, rows(board))
          |> assign(:clues, clues_by_id(board))
          |> assign(:game, game)}
 
@@ -43,15 +46,25 @@ defmodule CluebertWeb.HostLive do
           <p class="text-sm font-medium uppercase tracking-wide text-zinc-500">Host</p>
           <h1 class="text-2xl font-bold tracking-tight">{@board.name}</h1>
         </div>
-        <.button
-          :if={@game.phase != :done}
-          id="end-game"
-          phx-click="end_game"
-          data-confirm="End the game now? Scores will be final."
-          class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-        >
-          <.icon name="hero-flag" class="size-4" /> End game
-        </.button>
+        <div class="flex flex-wrap items-center gap-2">
+          <.link
+            href={~p"/games/#{@game_id}"}
+            target="cluebert-player"
+            id="open-player-screen"
+            class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+          >
+            <.icon name="hero-arrow-top-right-on-square" class="size-4" /> Open player screen
+          </.link>
+          <.button
+            :if={@game.phase != :done}
+            id="end-game"
+            phx-click="end_game"
+            data-confirm="End the game now? Scores will be final."
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+          >
+            <.icon name="hero-flag" class="size-4" /> End game
+          </.button>
+        </div>
       </div>
 
       <.scoreboard game={@game} />
@@ -62,18 +75,9 @@ defmodule CluebertWeb.HostLive do
         class="rounded-xl border border-zinc-200 bg-white p-6 text-center shadow-sm"
       >
         <h2 class="text-2xl font-bold">Game over</h2>
-        <ol id="final-standings" class="mx-auto mt-4 max-w-sm space-y-2 text-left">
-          <li
-            :for={{team_id, place} <- standings(@game)}
-            id={"standing-#{team_id}"}
-            class="flex items-center justify-between rounded-lg bg-zinc-50 px-4 py-2"
-          >
-            <span class="font-medium">{place}. {@game.teams[team_id].name}</span>
-            <span class="font-semibold tabular-nums">{@game.scores[team_id]}</span>
-          </li>
-        </ol>
+        <div class="mt-4"><.standings game={@game} /></div>
         <.link
-          navigate={~p"/"}
+          navigate={~p"/?#{[from: @game_id]}"}
           id="new-game"
           class="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
@@ -116,99 +120,8 @@ defmodule CluebertWeb.HostLive do
         </div>
       </section>
 
-      <div
-        id="board"
-        class="grid gap-2"
-        style={"grid-template-columns: repeat(#{length(@board.categories)}, minmax(0, 1fr))"}
-      >
-        <div
-          :for={category <- @board.categories}
-          id={"category-#{category.id}"}
-          class="flex min-h-16 items-center justify-center rounded-lg bg-blue-900 p-2 text-center text-sm font-bold uppercase tracking-wide text-white"
-        >
-          {category.title}
-        </div>
-
-        <%= for row <- 0..(@rows - 1)//1, category <- @board.categories do %>
-          <.tile
-            clue={Enum.at(category.clues, row)}
-            empty_id={"empty-#{category.id}-#{row}"}
-            game={@game}
-          />
-        <% end %>
-      </div>
+      <.board board={@board} game={@game} selectable />
     </Layouts.app>
-    """
-  end
-
-  attr :game, Game, required: true
-
-  defp scoreboard(assigns) do
-    ~H"""
-    <ol id="scoreboard" class="flex flex-wrap gap-2">
-      <li
-        :for={team_id <- @game.team_order}
-        id={"team-#{team_id}"}
-        aria-current={to_string(team_id == Game.current_team(@game))}
-        class={[
-          "flex items-center gap-3 rounded-lg px-4 py-2 shadow-sm ring-1 transition-colors",
-          if(team_id == Game.current_team(@game),
-            do: "bg-blue-600 text-white ring-blue-600",
-            else: "bg-white text-zinc-900 ring-zinc-200"
-          )
-        ]}
-      >
-        <span class="font-medium">{@game.teams[team_id].name}</span>
-        <span class="font-bold tabular-nums">{@game.scores[team_id]}</span>
-      </li>
-    </ol>
-    """
-  end
-
-  attr :clue, :any, required: true
-  attr :empty_id, :string, required: true
-  attr :game, Game, required: true
-
-  defp tile(%{clue: nil} = assigns) do
-    ~H"""
-    <div id={@empty_id} class="min-h-20 rounded-lg bg-zinc-100"></div>
-    """
-  end
-
-  defp tile(assigns) do
-    assigns = assign(assigns, :state, tile_state(assigns.game, assigns.clue.id))
-
-    ~H"""
-    <div
-      :if={@state == :answered}
-      id={"clue-#{@clue.id}"}
-      data-state="answered"
-      class="flex min-h-20 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"
-    >
-      <.icon name="hero-check-circle-solid" class="size-8" />
-      <span class="sr-only">Answered</span>
-    </div>
-
-    <div
-      :if={@state == :open}
-      id={"clue-#{@clue.id}"}
-      data-state="open"
-      class="flex min-h-20 items-center justify-center rounded-lg bg-blue-600 text-2xl font-bold text-white tabular-nums ring-4 ring-blue-300"
-    >
-      {@clue.value}
-    </div>
-
-    <button
-      :if={@state in [:available, :locked]}
-      id={"clue-#{@clue.id}"}
-      data-state={@state}
-      phx-click="select"
-      phx-value-clue={@clue.id}
-      disabled={@state == :locked}
-      class="min-h-20 cursor-pointer rounded-lg bg-blue-800 text-2xl font-bold text-amber-300 tabular-nums shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-md disabled:cursor-default disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:bg-blue-800 disabled:hover:shadow-sm"
-    >
-      {@clue.value}
-    </button>
     """
   end
 
@@ -267,32 +180,5 @@ defmodule CluebertWeb.HostLive do
     socket
     |> put_flash(:error, "That game no longer exists.")
     |> push_navigate(to: ~p"/")
-  end
-
-  defp tile_state(game, clue_id) do
-    cond do
-      MapSet.member?(game.answered, clue_id) -> :answered
-      game.open_clue == clue_id -> :open
-      game.phase == :selecting -> :available
-      true -> :locked
-    end
-  end
-
-  defp rows(board), do: board.categories |> Enum.map(&length(&1.clues)) |> Enum.max(fn -> 0 end)
-
-  defp clues_by_id(board) do
-    for category <- board.categories, clue <- category.clues, into: %{} do
-      {clue.id, Map.put(Map.take(clue, [:prompt, :response, :value]), :category, category.title)}
-    end
-  end
-
-  # Teams by score, highest first; ties keep play order and share a place.
-  defp standings(game) do
-    sorted = Enum.sort_by(game.team_order, &game.scores[&1], :desc)
-
-    for team_id <- sorted do
-      score = game.scores[team_id]
-      {team_id, Enum.find_index(sorted, &(game.scores[&1] == score)) + 1}
-    end
   end
 end

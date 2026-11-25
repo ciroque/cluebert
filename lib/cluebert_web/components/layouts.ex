@@ -11,6 +11,9 @@ defmodule CluebertWeb.Layouts do
   @doc """
   Renders the app layout: a header, the page content and the flash group.
 
+  With `full_screen`, there is no header and the content fills the whole
+  window, for the player screen shown on a TV (ADR 8).
+
   ## Examples
 
       <Layouts.app flash={@flash}>
@@ -24,7 +27,19 @@ defmodule CluebertWeb.Layouts do
     default: nil,
     doc: "the current [scope](https://phoenix.hexdocs.pm/scopes.html)"
 
+  attr :full_screen, :boolean, default: false, doc: "drop the header and fill the window"
+
   slot :inner_block, required: true
+
+  def app(%{full_screen: true} = assigns) do
+    ~H"""
+    <main class="min-h-screen">
+      {render_slot(@inner_block)}
+    </main>
+
+    <.flash_group flash={@flash} />
+    """
+  end
 
   def app(assigns) do
     ~H"""
