@@ -39,6 +39,22 @@ defmodule CluebertWeb.SetupLiveTest do
       assert has_element?(view, "#board-#{zebra.id}[aria-pressed=false]")
     end
 
+    test "groups boards under their collection", %{conn: conn} do
+      lessons = Cluebert.DataCase.unique_collection("Lessons")
+      general = Cluebert.DataCase.unique_collection("General")
+      plants = create_board("Plants", lessons)
+      weather = create_board("Weather", lessons)
+      sampler = create_board("Sampler", general)
+
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      assert has_element?(view, "#collection-#{lessons.id} h3", lessons.name)
+      assert has_element?(view, "#collection-#{lessons.id} #board-#{plants.id}")
+      assert has_element?(view, "#collection-#{lessons.id} #board-#{weather.id}")
+      assert has_element?(view, "#collection-#{general.id} #board-#{sampler.id}")
+      refute has_element?(view, "#collection-#{general.id} #board-#{plants.id}")
+    end
+
     test "choosing a board selects it", %{conn: conn} do
       apple = create_board("Apple")
       zebra = create_board("Zebra")
