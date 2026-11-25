@@ -15,6 +15,7 @@ defmodule CluebertWeb.Router do
 
     live "/", SetupLive
     live "/boards", ManageBoardsLive
+    live "/boards/:id", BoardEditorLive
     live "/games/:id/host", HostLive
     live "/games/:id", BoardLive
   end
