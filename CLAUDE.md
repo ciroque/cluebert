@@ -68,7 +68,7 @@ One small PR per step, each independently reviewable.
      with one column per category and rows up to the largest category.
      Correctly answered clues show a checkmark. The play order, current
      team and scores are visible, and the open clue is shown large.
-     Answered tiles are dimmed to a 20% gray. A button makes the window
+     Answered tiles are dimmed to a 10% gray. A button makes the window
      full screen. When
      the host starts a new game from game over, it switches to that game.
 
