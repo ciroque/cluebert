@@ -7,8 +7,6 @@ defmodule CluebertWeb.GameComponents do
   """
   use Phoenix.Component
 
-  import CluebertWeb.CoreComponents, only: [icon: 1]
-
   alias Cluebert.Boards.Board
   alias Cluebert.Game
 
