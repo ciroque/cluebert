@@ -55,10 +55,11 @@ One small PR per step, each independently reviewable.
      order. Names are checked by `Cluebert.Game`. Start calls
      `GameServer.start_game(board_id, team_names)`, which creates, shuffles
      and starts the game in one step, then goes to the host screen.
-   - `/games/:id/host` (`HostLive`): the board with responses, the play
-     order, scores and the current team. The host clicks the clue the
-     current team calls out (teams have no devices, ADR 2), then marks
-     Correct or Wrong on that clue. End Game is always available.
+   - `/games/:id/host` (`HostLive`): the board, the play order, scores and
+     the current team. The host clicks the clue the current team calls out
+     (teams have no devices, ADR 2). The open clue's prompt and response
+     show in a panel with Correct and Incorrect at its bottom right. End
+     Game is always available.
    - `/games/:id` (`BoardLive`): the shared screen, display only. A grid
      with one column per category and rows up to the largest category.
      Correctly answered clues show a checkmark. The play order, current
