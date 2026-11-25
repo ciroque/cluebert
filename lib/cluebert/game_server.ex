@@ -24,6 +24,14 @@ defmodule Cluebert.GameServer do
 
   The board never changes, so it is not broadcast; read it once with
   `get/1`.
+
+  When the host starts a new game from a finished one,
+  `announce_next_game/2` tells the old game's subscribers where to go:
+
+      {:next_game, old_id, new_id}
+
+  This lets a player screen left open on the old game follow the host to
+  the new one (ADR 8).
   """
   use GenServer, restart: :temporary
 
@@ -87,6 +95,17 @@ defmodule Cluebert.GameServer do
   @doc "Subscribes the caller to a game's updates. See the moduledoc."
   @spec subscribe(id()) :: :ok | {:error, term()}
   def subscribe(id), do: Phoenix.PubSub.subscribe(@pubsub, topic(id))
+
+  @doc """
+  Tells everyone watching `old_id` that the host has moved on to `new_id`,
+  by broadcasting `{:next_game, old_id, new_id}` on `topic(old_id)`.
+
+  The old game's process does not need to be running.
+  """
+  @spec announce_next_game(id(), id()) :: :ok
+  def announce_next_game(old_id, new_id) do
+    Phoenix.PubSub.broadcast(@pubsub, topic(old_id), {:next_game, old_id, new_id})
+  end
 
   @doc "Returns the game's id, board and current `%Cluebert.Game{}`."
   @spec get(id()) :: {:ok, state()} | {:error, :not_found}

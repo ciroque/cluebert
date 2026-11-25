@@ -113,6 +113,15 @@ defmodule Cluebert.GameServerTest do
     end
   end
 
+  describe "announce_next_game/2" do
+    test "tells the old game's subscribers about the new game" do
+      :ok = GameServer.subscribe("old-game")
+
+      assert :ok = GameServer.announce_next_game("old-game", "new-game")
+      assert_receive {:next_game, "old-game", "new-game"}
+    end
+  end
+
   describe "an unknown game" do
     test "returns :not_found" do
       assert {:error, :not_found} = GameServer.get("no-such-game")
