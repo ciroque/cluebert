@@ -14,6 +14,7 @@ defmodule Cluebert.Boards.Board do
 
   schema "boards" do
     field :name, :string
+    field :clue_count, :integer, virtual: true
 
     belongs_to :collection, Collection
     has_many :categories, Category, preload_order: [asc: :position]
@@ -29,6 +30,17 @@ defmodule Cluebert.Boards.Board do
   """
   def changeset(board, attrs) do
     board
+    |> name_changeset(attrs)
+    |> cast_assoc(:categories, with: &Category.changeset/3)
+  end
+
+  @doc """
+  Builds a changeset for the board's own fields only: its name, and the
+  collection the caller has put on the struct. Categories and clues are
+  left alone.
+  """
+  def name_changeset(board, attrs) do
+    board
     |> cast(attrs, [:name])
     |> update_change(:name, &String.trim/1)
     |> validate_required([:name, :collection_id])
@@ -37,6 +49,5 @@ defmodule Cluebert.Boards.Board do
       name: :boards_collection_id_name_index,
       message: "has already been taken in this collection"
     )
-    |> cast_assoc(:categories, with: &Category.changeset/3)
   end
 end

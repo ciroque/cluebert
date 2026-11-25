@@ -24,6 +24,13 @@ defmodule Cluebert.Boards.Collection do
     |> cast(attrs, [:name])
     |> update_change(:name, &String.trim/1)
     |> validate_required([:name])
-    |> unique_constraint(:name)
+    |> unique_constraint(:name, message: "is already a collection")
+  end
+
+  @doc "Builds a changeset for deleting a collection, which must have no boards."
+  def delete_changeset(collection) do
+    collection
+    |> change()
+    |> no_assoc_constraint(:boards, message: "still has boards; move or delete them first")
   end
 end
