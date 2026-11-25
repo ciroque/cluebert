@@ -122,8 +122,11 @@ defmodule Cluebert.GameTest do
       assert_raise ArgumentError, fn -> Game.shuffle_order(game, fn _ -> [1] end) end
     end
 
-    test "start requires at least one team" do
-      assert {:error, :no_teams} = Game.start(new_game())
+    test "start requires at least two teams" do
+      assert {:error, :too_few_teams} = Game.start(new_game())
+      assert {:error, :too_few_teams} = Game.start(add_teams(new_game(), ["Solo"]))
+      assert {:ok, %Game{phase: :selecting}} = Game.start(add_teams(new_game(), ["Red", "Blue"]))
+      assert Game.min_teams() == 2
     end
 
     test "start gives the first team in play order the turn" do
@@ -237,12 +240,6 @@ defmodule Cluebert.GameTest do
       game = play!(game, 2, :a1, :wrong)
       assert Game.current_team(game) == 3
     end
-
-    test "a single team keeps the turn after :wrong" do
-      game = play!(started(["Solo"]), 1, :a1, :wrong)
-
-      assert Game.current_team(game) == 1
-    end
   end
 
   describe "invariant 5: scores change only on :correct, by the clue value" do
@@ -262,7 +259,7 @@ defmodule Cluebert.GameTest do
   describe "ending" do
     test "answering the last clue ends the game" do
       game =
-        started(["Red"], %{a1: 100, b1: 200})
+        started(["Red", "Green"], %{a1: 100, b1: 200})
         |> play!(1, :a1, :correct)
         |> play!(1, :b1, :correct)
 
@@ -305,7 +302,7 @@ defmodule Cluebert.GameTest do
     test "invariants hold for arbitrary action sequences" do
       for _run <- 1..300 do
         clues = for i <- 1..Enum.random(1..12), into: %{}, do: {i, 100 * Enum.random(0..10)}
-        names = for i <- 1..Enum.random(1..5), do: "Team #{i}"
+        names = for i <- 1..Enum.random(2..5), do: "Team #{i}"
 
         {:ok, game} = clues |> new_game() |> add_teams(names) |> Game.shuffle_order()
         {:ok, game} = Game.start(game)

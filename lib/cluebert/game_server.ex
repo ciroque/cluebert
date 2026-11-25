@@ -46,7 +46,8 @@ defmodule Cluebert.GameServer do
 
   The teams are added in order, then shuffled into a random play order, and
   the game is started. Returns an error from `Cluebert.Game` if the board
-  has no clues (`:invalid_board`), there are no teams (`:no_teams`), or a
+  has no clues (`:invalid_board`), there are fewer than two teams
+  (`:too_few_teams`), or a
   name is rejected (see `Cluebert.Game.check_team_name/2`). Raises
   `Ecto.NoResultsError` if there is no such board.
   """

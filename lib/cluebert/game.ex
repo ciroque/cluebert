@@ -11,6 +11,7 @@ defmodule Cluebert.Game do
       Team names are trimmed, must not be blank, and must be unique ignoring
       case (`check_team_name/2`).
     * The play order can be shuffled during `:setup` and is locked by `start/1`.
+    * At least two teams are needed to start.
     * On their turn, the current team selects any clue that has not been
       answered. A clue can be selected any number of times until it is
       answered correctly.
@@ -38,6 +39,8 @@ defmodule Cluebert.Game do
        value; so the sum of all scores equals the sum of answered values.
     6. Teams and play order change only during `:setup`.
   """
+
+  @min_teams 2
 
   @enforce_keys [:clues]
   defstruct clues: %{},
@@ -74,7 +77,7 @@ defmodule Cluebert.Game do
           | :invalid_name
           | :duplicate_name
           | :unknown_team
-          | :no_teams
+          | :too_few_teams
           | :not_your_turn
           | :unknown_clue
           | :already_answered
@@ -191,9 +194,18 @@ defmodule Cluebert.Game do
 
   def shuffle_order(%__MODULE__{}, _shuffle), do: {:error, :wrong_phase}
 
-  @doc "Locks teams and play order and gives the first team the turn."
+  @doc "The fewest teams a game can start with."
+  @spec min_teams() :: pos_integer()
+  def min_teams, do: @min_teams
+
+  @doc """
+  Locks teams and play order and gives the first team the turn.
+
+  Needs at least two teams; returns `{:error, :too_few_teams}` otherwise.
+  """
   @spec start(t()) :: {:ok, t()} | {:error, error()}
-  def start(%__MODULE__{phase: :setup, team_order: []}), do: {:error, :no_teams}
+  def start(%__MODULE__{phase: :setup, team_order: order}) when length(order) < @min_teams,
+    do: {:error, :too_few_teams}
 
   def start(%__MODULE__{phase: :setup} = game),
     do: {:ok, %{game | phase: :selecting, turn: 0}}

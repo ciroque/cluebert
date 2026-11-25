@@ -138,8 +138,8 @@ defmodule Cluebert.GameServerTest do
     test "gives each game its own id" do
       board = create_board()
 
-      {:ok, first} = GameServer.start_game(board.id, ["Red"])
-      {:ok, second} = GameServer.start_game(board.id, ["Red"])
+      {:ok, first} = GameServer.start_game(board.id, ["Red", "Blue"])
+      {:ok, second} = GameServer.start_game(board.id, ["Red", "Blue"])
 
       on_exit(fn ->
         for id <- [first, second], [{pid, _}] <- [Registry.lookup(Cluebert.GameRegistry, id)] do
@@ -153,12 +153,13 @@ defmodule Cluebert.GameServerTest do
     test "rejects a board with no clues" do
       board = create_board([%{title: "Empty", clues: []}])
 
-      assert {:error, :invalid_board} = GameServer.start_game(board.id, ["Red"])
+      assert {:error, :invalid_board} = GameServer.start_game(board.id, ["Red", "Blue"])
     end
 
-    test "rejects no teams and bad team names" do
+    test "rejects fewer than two teams and bad team names" do
       board = create_board()
-      assert {:error, :no_teams} = GameServer.start_game(board.id, [])
+      assert {:error, :too_few_teams} = GameServer.start_game(board.id, [])
+      assert {:error, :too_few_teams} = GameServer.start_game(board.id, ["Red"])
       assert {:error, :duplicate_name} = GameServer.start_game(board.id, ["Red", "red"])
       assert {:error, :invalid_name} = GameServer.start_game(board.id, ["Red", " "])
     end
