@@ -52,7 +52,8 @@ ENV MIX_ENV=prod \
     PORT=4000
 
 WORKDIR /app
-RUN adduser -D -H app && chown app:app /app
+# A fixed uid, which the Helm chart's runAsUser matches.
+RUN adduser -D -H -u 1000 app && chown app:app /app
 COPY --from=build --chown=app:app /app/_build/prod/rel/cluebert ./
 
 USER app

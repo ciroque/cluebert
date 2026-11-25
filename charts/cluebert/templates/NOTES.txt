@@ -1,0 +1,15 @@
+Cluebert is deploying as one pod (games live in its memory; see ADR 4).
+
+{{- if .Values.ingress.enabled }}
+
+  https://{{ .Values.host }}/
+{{- else }}
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "cluebert.fullname" . }} 8080:{{ .Values.service.port }}
+  then open http://127.0.0.1:8080/
+{{- end }}
+
+Status:
+
+  kubectl --namespace {{ .Release.Namespace }} rollout status deployment/{{ include "cluebert.fullname" . }}
+  kubectl --namespace {{ .Release.Namespace }} logs -l app.kubernetes.io/instance={{ .Release.Name }}

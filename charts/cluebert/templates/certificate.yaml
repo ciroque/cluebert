@@ -1,0 +1,15 @@
+{{- if and .Values.ingress.enabled .Values.certificate.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "cluebert.fullname" . }}
+  labels:
+    {{- include "cluebert.labels" . | nindent 4 }}
+spec:
+  secretName: {{ .Values.ingress.tlsSecretName }}
+  issuerRef:
+    name: {{ .Values.certificate.issuerName }}
+    kind: {{ .Values.certificate.issuerKind | default "ClusterIssuer" }}
+  dnsNames:
+    - {{ include "cluebert.host" . | quote }}
+{{- end }}
