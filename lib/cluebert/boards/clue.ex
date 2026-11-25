@@ -30,9 +30,22 @@ defmodule Cluebert.Boards.Clue do
   """
   def changeset(clue, attrs, position) do
     clue
-    |> cast(attrs, [:prompt, :response, :value])
+    |> content_changeset(attrs)
     |> put_change(:position, position)
-    |> validate_required([:prompt, :response, :value, :position])
+    |> validate_required([:position])
+  end
+
+  @doc """
+  Builds a changeset for a clue's prompt, response and value only. Text is
+  trimmed. Position is left alone; the board editor moves clues with
+  `Cluebert.Boards.move_clue/2`.
+  """
+  def content_changeset(clue, attrs) do
+    clue
+    |> cast(attrs, [:prompt, :response, :value])
+    |> update_change(:prompt, &(&1 && String.trim(&1)))
+    |> update_change(:response, &(&1 && String.trim(&1)))
+    |> validate_required([:prompt, :response, :value])
     |> validate_number(:value, greater_than_or_equal_to: 0)
     |> check_constraint(:value, name: :value_must_be_non_negative)
     |> unique_constraint([:category_id, :position])

@@ -10,7 +10,7 @@ defmodule Cluebert.Boards do
   import Ecto.Query, warn: false
 
   alias Cluebert.Repo
-  alias Cluebert.Boards.{Board, Collection}
+  alias Cluebert.Boards.{Board, Category, Clue, Collection}
 
   @default_collection "General"
 
@@ -199,5 +199,148 @@ defmodule Cluebert.Boards do
         preload: [categories: {c, clues: cl}]
 
     Repo.one!(query)
+  end
+
+  ## The board editor: categories and clues
+
+  @doc """
+  Loads a board for editing: categories and clues in position order (as
+  `get_board!/1`), plus its collection.
+  """
+  @spec get_board_for_editing!(term()) :: Board.t()
+  def get_board_for_editing!(id), do: id |> get_board!() |> Repo.preload(:collection)
+
+  @doc "Gets a category by id. Raises `Ecto.NoResultsError` if there is none."
+  @spec get_category!(term()) :: Category.t()
+  def get_category!(id), do: Repo.get!(Category, id)
+
+  @doc "Gets a clue by id. Raises `Ecto.NoResultsError` if there is none."
+  @spec get_clue!(term()) :: Clue.t()
+  def get_clue!(id), do: Repo.get!(Clue, id)
+
+  @doc "Returns a changeset for a category's title, for forms."
+  @spec change_category(Category.t(), map()) :: Ecto.Changeset.t()
+  def change_category(%Category{} = category, attrs \\ %{}),
+    do: Category.title_changeset(category, attrs)
+
+  @doc "Adds a category at the end of the board (its rightmost column)."
+  @spec create_category(Board.t(), map()) :: {:ok, Category.t()} | {:error, Ecto.Changeset.t()}
+  def create_category(%Board{} = board, attrs) do
+    position = next_position(from c in Category, where: c.board_id == ^board.id)
+
+    %Category{board_id: board.id, position: position}
+    |> Category.title_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc "Renames a category."
+  @spec update_category(Category.t(), map()) :: {:ok, Category.t()} | {:error, Ecto.Changeset.t()}
+  def update_category(%Category{} = category, attrs) do
+    category
+    |> Category.title_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc "Deletes a category with its clues."
+  @spec delete_category(Category.t()) :: {:ok, Category.t()} | {:error, Ecto.Changeset.t()}
+  def delete_category(%Category{} = category), do: Repo.delete(category)
+
+  @doc """
+  Moves a category one place earlier (`:up`, towards the left of the board)
+  or later (`:down`). A category already at that end stays put.
+  """
+  @spec move_category(Category.t(), :up | :down) :: {:ok, Category.t()}
+  def move_category(%Category{} = category, direction),
+    do: move(Category, category, :board_id, direction)
+
+  @doc """
+  Returns a new clue for `category`, for the add-clue form: its value is
+  filled in as 100 times the row it will take, matching the importer.
+  """
+  @spec new_clue(Category.t()) :: Clue.t()
+  def new_clue(%Category{} = category) do
+    count = Repo.aggregate(from(c in Clue, where: c.category_id == ^category.id), :count)
+    %Clue{category_id: category.id, value: (count + 1) * 100}
+  end
+
+  @doc "Returns a changeset for a clue's prompt, response and value, for forms."
+  @spec change_clue(Clue.t(), map()) :: Ecto.Changeset.t()
+  def change_clue(%Clue{} = clue, attrs \\ %{}), do: Clue.content_changeset(clue, attrs)
+
+  @doc "Adds a clue at the end of the category (the bottom of its column)."
+  @spec create_clue(Category.t(), map()) :: {:ok, Clue.t()} | {:error, Ecto.Changeset.t()}
+  def create_clue(%Category{} = category, attrs) do
+    position = next_position(from c in Clue, where: c.category_id == ^category.id)
+
+    %Clue{category_id: category.id, position: position}
+    |> Clue.content_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc "Changes a clue's prompt, response or value."
+  @spec update_clue(Clue.t(), map()) :: {:ok, Clue.t()} | {:error, Ecto.Changeset.t()}
+  def update_clue(%Clue{} = clue, attrs) do
+    clue
+    |> Clue.content_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc "Deletes a clue."
+  @spec delete_clue(Clue.t()) :: {:ok, Clue.t()} | {:error, Ecto.Changeset.t()}
+  def delete_clue(%Clue{} = clue), do: Repo.delete(clue)
+
+  @doc """
+  Moves a clue one place up or down within its category. A clue already at
+  that end stays put. Its value does not change.
+  """
+  @spec move_clue(Clue.t(), :up | :down) :: {:ok, Clue.t()}
+  def move_clue(%Clue{} = clue, direction), do: move(Clue, clue, :category_id, direction)
+
+  defp next_position(query) do
+    (Repo.one(from q in query, select: max(q.position)) || -1) + 1
+  end
+
+  # Swaps `record` with its nearest neighbour in the given direction within
+  # the same parent. Positions may have gaps after deletes; only their order
+  # matters. The record parks at a negative position (its own id, so it is
+  # unique) while the neighbour takes its place, to satisfy the unique
+  # (parent, position) index.
+  defp move(schema, record, parent, direction) when direction in [:up, :down] do
+    parent_id = Map.fetch!(record, parent)
+
+    neighbour_query =
+      from r in schema,
+        where: field(r, ^parent) == ^parent_id,
+        limit: 1
+
+    neighbour_query =
+      case direction do
+        :up ->
+          from r in neighbour_query,
+            where: r.position < ^record.position,
+            order_by: [desc: r.position]
+
+        :down ->
+          from r in neighbour_query,
+            where: r.position > ^record.position,
+            order_by: [asc: r.position]
+      end
+
+    case Repo.one(neighbour_query) do
+      nil ->
+        {:ok, record}
+
+      neighbour ->
+        Repo.transact(fn ->
+          set_position(schema, record.id, -record.id)
+          set_position(schema, neighbour.id, record.position)
+          set_position(schema, record.id, neighbour.position)
+          {:ok, %{record | position: neighbour.position}}
+        end)
+    end
+  end
+
+  defp set_position(schema, id, position) do
+    Repo.update_all(from(r in schema, where: r.id == ^id), set: [position: position])
   end
 end

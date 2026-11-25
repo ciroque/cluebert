@@ -83,6 +83,11 @@ defmodule Cluebert.BoardsTest do
       assert "can't be blank" in errors_on(changeset).name
     end
 
+    test "renaming to blank is an error, not a crash", %{collection: collection} do
+      assert {:error, changeset} = Boards.update_collection(collection, %{name: "  "})
+      assert "can't be blank" in errors_on(changeset).name
+    end
+
     test "only an empty collection can be deleted", %{collection: collection} do
       {:ok, board} = Boards.create_board(collection, %{name: "Keep"})
 
@@ -101,6 +106,13 @@ defmodule Cluebert.BoardsTest do
 
       assert {:ok, %Board{name: "Renamed"}} = Boards.rename_board(board, %{name: " Renamed "})
       assert length(Boards.get_board!(board.id).categories) == 2
+    end
+
+    test "renaming to blank is an error, not a crash", %{collection: collection} do
+      {:ok, board} = Boards.create_board(collection, %{name: "Mine"})
+
+      assert {:error, changeset} = Boards.rename_board(board, %{name: " "})
+      assert "can't be blank" in errors_on(changeset).name
     end
 
     test "rename rejects a name taken in the same collection", %{collection: collection} do
@@ -135,6 +147,142 @@ defmodule Cluebert.BoardsTest do
       assert {:ok, _} = Boards.delete_board(board)
       assert_raise Ecto.NoResultsError, fn -> Boards.get_board!(board.id) end
       assert Repo.aggregate(Category, :count) == 0
+    end
+  end
+
+  describe "editing categories" do
+    setup %{collection: collection} do
+      {:ok, board} = Boards.create_board(collection, board_attrs())
+      %{board: board}
+    end
+
+    defp titles(board), do: Enum.map(Boards.get_board!(board.id).categories, & &1.title)
+
+    test "adds categories at the end, trimmed", %{board: board} do
+      assert {:ok, %Category{title: "Third"}} = Boards.create_category(board, %{title: " Third "})
+      assert titles(board) == ["First", "Second", "Third"]
+    end
+
+    test "renames, and requires a title", %{board: board} do
+      [first, _] = Boards.get_board!(board.id).categories
+
+      assert {:ok, _} = Boards.update_category(first, %{title: "Renamed"})
+      assert {:error, changeset} = Boards.update_category(first, %{title: " "})
+      assert "can't be blank" in errors_on(changeset).title
+      assert titles(board) == ["Renamed", "Second"]
+    end
+
+    test "moves up and down, staying put at the ends", %{board: board} do
+      {:ok, third} = Boards.create_category(board, %{title: "Third"})
+
+      {:ok, _} = Boards.move_category(Boards.get_category!(third.id), :up)
+      assert titles(board) == ["First", "Third", "Second"]
+
+      {:ok, _} = Boards.move_category(Boards.get_category!(third.id), :up)
+      {:ok, _} = Boards.move_category(Boards.get_category!(third.id), :up)
+      assert titles(board) == ["Third", "First", "Second"]
+
+      {:ok, _} = Boards.move_category(Boards.get_category!(third.id), :down)
+      assert titles(board) == ["First", "Third", "Second"]
+    end
+
+    test "moves past the gap a delete leaves", %{board: board} do
+      {:ok, third} = Boards.create_category(board, %{title: "Third"})
+      [_first, second, _third] = Boards.get_board!(board.id).categories
+      {:ok, _} = Boards.delete_category(second)
+
+      {:ok, _} = Boards.move_category(Boards.get_category!(third.id), :up)
+      assert titles(board) == ["Third", "First"]
+
+      {:ok, _} = Boards.create_category(board, %{title: "Fourth"})
+      assert titles(board) == ["Third", "First", "Fourth"]
+    end
+
+    test "deleting a category deletes its clues", %{board: board} do
+      [first, _] = Boards.get_board!(board.id).categories
+
+      {:ok, _} = Boards.delete_category(first)
+
+      assert titles(board) == ["Second"]
+      assert Repo.aggregate(Clue, :count) == 1
+    end
+  end
+
+  describe "editing clues" do
+    setup %{collection: collection} do
+      {:ok, board} = Boards.create_board(collection, board_attrs())
+      [first, _] = Boards.get_board!(board.id).categories
+      %{board: board, category: first}
+    end
+
+    defp prompts(category) do
+      Repo.all(
+        from c in Clue,
+          where: c.category_id == ^category.id,
+          order_by: c.position,
+          select: c.prompt
+      )
+    end
+
+    test "new_clue/1 suggests the next row's value", %{category: category} do
+      assert %Clue{value: 400, category_id: id} = Boards.new_clue(category)
+      assert id == category.id
+    end
+
+    test "adds clues at the bottom, trimmed", %{category: category} do
+      assert {:ok, %Clue{prompt: "New", response: "Answer"}} =
+               Boards.create_clue(category, %{prompt: " New ", response: " Answer ", value: 400})
+
+      assert prompts(category) == ["Prompt 1", "Prompt 2", "Prompt 3", "New"]
+    end
+
+    test "validates prompt, response and value", %{category: category} do
+      assert {:error, changeset} =
+               Boards.create_clue(category, %{prompt: "", response: " ", value: -1})
+
+      errors = errors_on(changeset)
+      assert "can't be blank" in errors.prompt
+      assert "can't be blank" in errors.response
+      assert "must be greater than or equal to 0" in errors.value
+    end
+
+    test "clearing a clue's text is an error, not a crash", %{category: category} do
+      [clue | _] = Repo.all(from c in Clue, where: c.category_id == ^category.id)
+
+      assert {:error, changeset} = Boards.update_clue(clue, %{prompt: " ", response: ""})
+      assert "can't be blank" in errors_on(changeset).prompt
+      assert "can't be blank" in errors_on(changeset).response
+    end
+
+    test "updates a clue", %{category: category} do
+      [clue | _] =
+        Repo.all(from c in Clue, where: c.category_id == ^category.id, order_by: c.position)
+
+      assert {:ok, %Clue{prompt: "Changed", value: 150}} =
+               Boards.update_clue(clue, %{prompt: "Changed", value: 150})
+    end
+
+    test "moves up and down, keeping values, staying put at the ends", %{category: category} do
+      [one, _two, three] =
+        Repo.all(from c in Clue, where: c.category_id == ^category.id, order_by: c.position)
+
+      {:ok, _} = Boards.move_clue(Boards.get_clue!(three.id), :up)
+      assert prompts(category) == ["Prompt 1", "Prompt 3", "Prompt 2"]
+      assert Boards.get_clue!(three.id).value == 300
+
+      {:ok, _} = Boards.move_clue(Boards.get_clue!(one.id), :up)
+      assert prompts(category) == ["Prompt 1", "Prompt 3", "Prompt 2"]
+
+      {:ok, _} = Boards.move_clue(Boards.get_clue!(one.id), :down)
+      assert prompts(category) == ["Prompt 3", "Prompt 1", "Prompt 2"]
+    end
+
+    test "deletes a clue", %{category: category} do
+      [_one, two, _three] =
+        Repo.all(from c in Clue, where: c.category_id == ^category.id, order_by: c.position)
+
+      {:ok, _} = Boards.delete_clue(two)
+      assert prompts(category) == ["Prompt 1", "Prompt 3"]
     end
   end
 

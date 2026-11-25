@@ -99,7 +99,13 @@ defmodule CluebertWeb.ManageBoardsLive do
               <.name_form form={@form} id="board-form" placeholder="Board name" />
             <% else %>
               <div class="flex min-w-0 items-center gap-3">
-                <span class="truncate font-medium">{board.name}</span>
+                <.link
+                  navigate={~p"/boards/#{board.id}"}
+                  id={"edit-board-#{board.id}"}
+                  class="truncate font-medium text-zinc-900 underline-offset-4 transition-colors hover:text-blue-700 hover:underline"
+                >
+                  {board.name}
+                </.link>
                 <span
                   :if={board.clue_count > 0}
                   id={"clue-count-#{board.id}"}
