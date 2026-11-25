@@ -12,6 +12,8 @@ defmodule Cluebert.Application do
       Cluebert.Repo,
       {DNSCluster, query: Application.get_env(:cluebert, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Cluebert.PubSub},
+      {Registry, keys: :unique, name: Cluebert.GameRegistry},
+      {DynamicSupervisor, name: Cluebert.GameSupervisor, strategy: :one_for_one},
       CluebertWeb.Endpoint
     ]
 
