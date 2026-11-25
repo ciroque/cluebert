@@ -41,17 +41,37 @@ if config_env() == :dev do
 end
 
 if config_env() == :prod do
-  database_url =
-    System.get_env("DATABASE_URL") ||
-      raise """
-      environment variable DATABASE_URL is missing.
-      For example: ecto://USER:PASS@HOST/DATABASE
-      """
+  # Either DATABASE_URL, or its parts in separate variables (as the Helm
+  # chart sets them), so a password needs no URL escaping.
+  database =
+    case System.get_env("DATABASE_URL") do
+      nil ->
+        fetch = fn name ->
+          System.get_env(name) ||
+            raise """
+            environment variable #{name} is missing.
+            Set DATABASE_URL (ecto://USER:PASS@HOST/DATABASE), or DATABASE_HOST,
+            DATABASE_NAME, DATABASE_USERNAME and DATABASE_PASSWORD.
+            """
+        end
+
+        [
+          hostname: fetch.("DATABASE_HOST"),
+          port: String.to_integer(System.get_env("DATABASE_PORT", "5432")),
+          database: fetch.("DATABASE_NAME"),
+          username: fetch.("DATABASE_USERNAME"),
+          password: fetch.("DATABASE_PASSWORD")
+        ]
+
+      url ->
+        [url: url]
+    end
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
+  config :cluebert, Cluebert.Repo, database
+
   config :cluebert, Cluebert.Repo,
-    url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6
 
