@@ -137,8 +137,9 @@ defmodule CluebertWeb.SetupLive do
             </div>
           </div>
           <p :if={@boards == []} id="no-boards" class="text-sm text-zinc-500">
-            No boards yet. Import one with <code>mix cluebert.import board.json</code>
-            (see <code>docs/board-format.md</code>).
+            No boards yet.
+            <.link navigate={~p"/boards/import"} class="text-blue-700 hover:underline">Import one</.link>
+            or <.link navigate={~p"/boards"} class="text-blue-700 hover:underline">create one</.link>.
           </p>
         </section>
       </div>
