@@ -6,18 +6,23 @@ defmodule CluebertWeb.SetupLive do
   here until Start and are checked with `Cluebert.Game.check_team_name/2`,
   so the naming rule stays in the rules module. Start creates a game that is
   already playing and goes to its host screen.
+
+  When the host comes here from a finished game (`/?from=<game id>`), Start
+  also announces the new game to that game's subscribers, so a player screen
+  still open on it switches to the new game.
   """
   use CluebertWeb, :live_view
 
   alias Cluebert.{Boards, Game, GameServer}
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
     boards = Boards.list_boards()
 
     {:ok,
      socket
      |> assign(:page_title, "New game")
+     |> assign(:from, params["from"])
      |> assign(:boards, boards)
      |> assign(:board_id, boards |> List.first() |> then(&(&1 && &1.id)))
      |> assign(:teams, [])
@@ -169,6 +174,7 @@ defmodule CluebertWeb.SetupLive do
 
     case GameServer.start_game(board_id, teams) do
       {:ok, id} ->
+        if from = socket.assigns.from, do: GameServer.announce_next_game(from, id)
         {:noreply, push_navigate(socket, to: ~p"/games/#{id}/host")}
 
       {:error, reason} ->

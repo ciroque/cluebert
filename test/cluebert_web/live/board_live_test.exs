@@ -111,6 +111,12 @@ defmodule CluebertWeb.BoardLiveTest do
       assert has_element?(view, "#game-over #standing-#{red}", "1. Red")
       assert has_element?(view, "#game-over #standing-#{blue}", "1. Blue")
     end
+
+    test "switches to the next game when the host starts one", %{view: view, id: id} do
+      GameServer.announce_next_game(id, "the-next-game")
+
+      assert_redirect(view, "/games/the-next-game")
+    end
   end
 
   describe "an unknown game" do

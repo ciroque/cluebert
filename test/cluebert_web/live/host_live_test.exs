@@ -128,7 +128,7 @@ defmodule CluebertWeb.HostLiveTest do
       assert has_element?(view, "#final-standings #standing-#{blue}", "1. Blue")
       assert has_element?(view, "#final-standings #standing-#{red}", "2. Red")
       refute has_element?(view, "#end-game")
-      assert has_element?(view, "#new-game")
+      assert has_element?(view, ~s(#new-game[href="/?from=#{ctx.id}"]))
     end
 
     test "end game freezes the scores and shows the standings", %{view: view} = ctx do

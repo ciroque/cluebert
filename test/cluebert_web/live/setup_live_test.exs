@@ -155,6 +155,21 @@ defmodule CluebertWeb.SetupLiveTest do
       assert game.teams |> Map.values() |> Enum.map(& &1.name) |> Enum.sort() == ["Blue", "Red"]
     end
 
+    test "coming from a finished game, announces the new game to it", %{conn: conn} do
+      create_board("Apple")
+      :ok = GameServer.subscribe("finished-game")
+      {:ok, view, _html} = live(conn, ~p"/?from=finished-game")
+      add_team(view, "Red")
+      add_team(view, "Blue")
+
+      assert {:error, {:live_redirect, %{to: "/games/" <> rest}}} =
+               view |> element("#start-game") |> render_click()
+
+      new_id = String.replace_suffix(rest, "/host", "")
+      stop_game_on_exit(new_id)
+      assert_receive {:next_game, "finished-game", ^new_id}
+    end
+
     test "shows an error for a board with no clues", %{conn: conn} do
       {:ok, _} = Boards.create_board(%{name: Cluebert.DataCase.unique_board_name("Empty")})
       {:ok, view, _html} = live(conn, ~p"/")

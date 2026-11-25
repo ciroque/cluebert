@@ -7,6 +7,9 @@ defmodule CluebertWeb.BoardLive do
   order with scores and the current team, and the open clue's prompt
   covering the screen. Responses are never sent to this screen. It follows
   the game through `Cluebert.GameServer` broadcasts.
+
+  When the host starts a new game from this one, the screen switches to the
+  new game by itself, so the window on the TV can stay open between games.
   """
   use CluebertWeb, :live_view
 
@@ -91,5 +94,9 @@ defmodule CluebertWeb.BoardLive do
   @impl true
   def handle_info({:game_updated, id, game}, %{assigns: %{game_id: id}} = socket) do
     {:noreply, assign(socket, :game, game)}
+  end
+
+  def handle_info({:next_game, id, next_id}, %{assigns: %{game_id: id}} = socket) do
+    {:noreply, push_navigate(socket, to: ~p"/games/#{next_id}")}
   end
 end

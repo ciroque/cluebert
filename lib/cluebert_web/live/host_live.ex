@@ -77,7 +77,7 @@ defmodule CluebertWeb.HostLive do
         <h2 class="text-2xl font-bold">Game over</h2>
         <div class="mt-4"><.standings game={@game} /></div>
         <.link
-          navigate={~p"/"}
+          navigate={~p"/?#{[from: @game_id]}"}
           id="new-game"
           class="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
