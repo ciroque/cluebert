@@ -113,6 +113,56 @@ defmodule Cluebert.GameServerTest do
     end
   end
 
+  describe "a finished game" do
+    defp start_short_lived_game(ttl) do
+      board = create_board()
+      id = "finished-#{System.unique_integer([:positive])}"
+
+      start_supervised!(
+        {GameServer, id: id, board: board, team_names: ["Red", "Blue"], finished_ttl: ttl}
+      )
+
+      {:ok, ref} = GameServer.monitor(id)
+      %{id: id, ref: ref}
+    end
+
+    test "stops itself once its time is up" do
+      %{id: id, ref: ref} = start_short_lived_game(0)
+
+      {:ok, _} = GameServer.end_game(id)
+
+      assert_receive {:DOWN, ^ref, :process, _pid, :normal}
+      assert {:error, :not_found} = GameServer.get(id)
+    end
+
+    test "stops after the last clue is answered, too" do
+      %{id: id, ref: ref} = start_short_lived_game(0)
+      {:ok, %{board: board, game: game}} = GameServer.get(id)
+
+      for clue_id <- clue_ids(board) do
+        {:ok, _} = GameServer.select(id, Game.current_team(game), clue_id)
+        {:ok, _} = GameServer.judge(id, :correct)
+      end
+
+      assert_receive {:DOWN, ^ref, :process, _pid, :normal}
+    end
+
+    test "keeps running until then, for the next game to read" do
+      %{id: id, ref: ref} = start_short_lived_game(:timer.hours(1))
+
+      {:ok, _} = GameServer.end_game(id)
+
+      assert {:ok, %{game: %Game{phase: :done}}} = GameServer.get(id)
+      refute_received {:DOWN, ^ref, _, _, _}
+    end
+  end
+
+  describe "monitor/1" do
+    test "returns :not_found for an unknown game" do
+      assert {:error, :not_found} = GameServer.monitor("no-such-game")
+    end
+  end
+
   describe "announce_next_game/2" do
     test "tells the old game's subscribers about the new game" do
       :ok = GameServer.subscribe("old-game")
