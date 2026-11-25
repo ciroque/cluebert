@@ -98,6 +98,18 @@ defmodule CluebertWeb.SetupLiveTest do
       assert has_element?(view, "#team-form", "That name is already taken")
     end
 
+    test "clear all removes every team", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/")
+      refute has_element?(view, "#clear-teams")
+      add_team(view, "Red")
+      add_team(view, "Blue")
+
+      view |> element("#clear-teams") |> render_click()
+
+      refute has_element?(view, "#team-0")
+      refute has_element?(view, "#clear-teams")
+    end
+
     test "removes a team", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
       add_team(view, "Red")
@@ -107,6 +119,49 @@ defmodule CluebertWeb.SetupLiveTest do
 
       assert has_element?(view, "#team-0", "Blue")
       refute has_element?(view, "#team-1")
+    end
+  end
+
+  describe "coming from a finished game" do
+    setup do
+      board = create_board("Apple")
+      id = "finished-#{System.unique_integer([:positive])}"
+
+      start_supervised!(
+        {GameServer,
+         id: id,
+         board: Boards.get_board!(board.id),
+         team_names: ["Red", "Blue", "Gold"],
+         shuffle: &Enum.reverse/1}
+      )
+
+      %{from: id}
+    end
+
+    test "fills in its teams in the order they were entered", %{conn: conn, from: from} do
+      {:ok, view, _html} = live(conn, ~p"/?from=#{from}")
+
+      assert has_element?(view, "#team-0", "Red")
+      assert has_element?(view, "#team-1", "Blue")
+      assert has_element?(view, "#team-2", "Gold")
+      assert has_element?(view, "#teams-carried-over")
+      refute has_element?(view, "#start-game[disabled]")
+    end
+
+    test "clearing the teams also drops the note", %{conn: conn, from: from} do
+      {:ok, view, _html} = live(conn, ~p"/?from=#{from}")
+
+      view |> element("#clear-teams") |> render_click()
+
+      refute has_element?(view, "#team-0")
+      refute has_element?(view, "#teams-carried-over")
+    end
+
+    test "fills in nothing if that game is gone", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/?from=no-such-game")
+
+      refute has_element?(view, "#team-0")
+      refute has_element?(view, "#teams-carried-over")
     end
   end
 
