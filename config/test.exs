@@ -20,12 +20,6 @@ config :cluebert, CluebertWeb.Endpoint,
   secret_key_base: "I2apPt5NPfE2xkD9VzJ4LgaRHyXQaOsYQc2MOcnjFSmFbgvtcc0BmvFoqNgwQ3/j",
   server: false
 
-# In test we don't send emails
-config :cluebert, Cluebert.Mailer, adapter: Swoosh.Adapters.Test
-
-# Disable swoosh api client as it is only required for production adapters
-config :swoosh, :api_client, false
-
 # Print only warnings and errors during test
 config :logger, level: :warning
 

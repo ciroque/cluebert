@@ -16,7 +16,7 @@ config :cluebert, CluebertWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: CluebertWeb.ErrorHTML, json: CluebertWeb.ErrorJSON],
+    formats: [html: CluebertWeb.ErrorHTML],
     layout: false
   ],
   pubsub_server: Cluebert.PubSub,
@@ -26,15 +26,6 @@ config :cluebert, CluebertWeb.Endpoint,
 config :phoenix_live_view,
   # the attribute set on all root tags. Used for Phoenix.LiveView.ColocatedCSS.
   root_tag_attribute: "phx-r"
-
-# Configure the mailer
-#
-# By default it uses the "Local" adapter which stores the emails
-# locally. You can see the emails in your browser, at "/dev/mailbox".
-#
-# For production it's recommended to configure a different adapter
-# at the `config/runtime.exs`.
-config :cluebert, Cluebert.Mailer, adapter: Swoosh.Adapters.Local
 
 # Configure esbuild (the version is required)
 config :esbuild,

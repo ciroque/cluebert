@@ -14,16 +14,9 @@ config :cluebert, CluebertWeb.Endpoint,
   force_ssl: [
     rewrite_on: [:x_forwarded_proto],
     exclude: [
-      # paths: ["/health"],
       hosts: ["localhost", "127.0.0.1", "0.0.0.0"]
     ]
   ]
-
-# Configure Swoosh API Client
-config :swoosh, api_client: Swoosh.ApiClient.Req
-
-# Disable Swoosh Local Memory Storage
-config :swoosh, local: false
 
 # Do not print debug messages in production
 config :logger, level: :info

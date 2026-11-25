@@ -4,7 +4,7 @@ Date: 2026-11-25
 
 ## Status
 
-Proposed. The keep list is still to be confirmed.
+Accepted. Implemented in PR #3.
 
 ## Context
 
