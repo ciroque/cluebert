@@ -19,6 +19,18 @@ defmodule CluebertWeb.ManageBoardsLiveTest do
     view |> form("##{form_id}", %{field => %{name: name}}) |> render_submit()
   end
 
+  describe "navigation" do
+    test "the header links to new game and boards", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      assert {:error, {:live_redirect, %{to: "/boards"}}} =
+               view |> element("#nav-boards") |> render_click()
+
+      {:ok, view, _html} = live(conn, ~p"/boards")
+      assert has_element?(view, ~s(#nav-new-game[href="/"]))
+    end
+  end
+
   describe "collections" do
     test "lists collections with their boards and clue counts", %{conn: conn} do
       collection = DataCase.unique_collection()
