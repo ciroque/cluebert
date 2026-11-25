@@ -58,4 +58,4 @@ edits never affect a game in progress.
   where practical.
 - Replacing a board deletes it and creates a new one, so its id changes.
   Running games are unaffected (ADR 5). Nothing else stores board ids yet.
-- The management UI has no access control. That is covered by its own ADR.
+- The management UI has no access control, for now (ADR 10).
