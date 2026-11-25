@@ -22,7 +22,7 @@ defmodule Cluebert.Boards.Collection do
   def changeset(collection, attrs) do
     collection
     |> cast(attrs, [:name])
-    |> update_change(:name, &String.trim/1)
+    |> update_change(:name, &(&1 && String.trim(&1)))
     |> validate_required([:name])
     |> unique_constraint(:name, message: "is already a collection")
   end

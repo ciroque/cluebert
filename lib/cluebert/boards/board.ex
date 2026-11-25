@@ -42,7 +42,7 @@ defmodule Cluebert.Boards.Board do
   def name_changeset(board, attrs) do
     board
     |> cast(attrs, [:name])
-    |> update_change(:name, &String.trim/1)
+    |> update_change(:name, &(&1 && String.trim(&1)))
     |> validate_required([:name, :collection_id])
     |> assoc_constraint(:collection)
     |> unique_constraint(:name,

@@ -83,6 +83,11 @@ defmodule Cluebert.BoardsTest do
       assert "can't be blank" in errors_on(changeset).name
     end
 
+    test "renaming to blank is an error, not a crash", %{collection: collection} do
+      assert {:error, changeset} = Boards.update_collection(collection, %{name: "  "})
+      assert "can't be blank" in errors_on(changeset).name
+    end
+
     test "only an empty collection can be deleted", %{collection: collection} do
       {:ok, board} = Boards.create_board(collection, %{name: "Keep"})
 
@@ -101,6 +106,13 @@ defmodule Cluebert.BoardsTest do
 
       assert {:ok, %Board{name: "Renamed"}} = Boards.rename_board(board, %{name: " Renamed "})
       assert length(Boards.get_board!(board.id).categories) == 2
+    end
+
+    test "renaming to blank is an error, not a crash", %{collection: collection} do
+      {:ok, board} = Boards.create_board(collection, %{name: "Mine"})
+
+      assert {:error, changeset} = Boards.rename_board(board, %{name: " "})
+      assert "can't be blank" in errors_on(changeset).name
     end
 
     test "rename rejects a name taken in the same collection", %{collection: collection} do
