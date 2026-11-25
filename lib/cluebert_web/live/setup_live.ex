@@ -105,29 +105,40 @@ defmodule CluebertWeb.SetupLive do
         <section id="boards-section" class="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
           <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">Board</h2>
 
-          <div :if={@boards != []} id="boards" class="space-y-2">
-            <button
-              :for={board <- @boards}
-              id={"board-#{board.id}"}
-              type="button"
-              phx-click="choose_board"
-              phx-value-id={board.id}
-              aria-pressed={to_string(board.id == @board_id)}
-              class={[
-                "flex w-full cursor-pointer items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors",
-                if(board.id == @board_id,
-                  do: "border-blue-600 bg-blue-50 text-blue-900 ring-1 ring-blue-600",
-                  else: "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
-                )
-              ]}
+          <div :if={@boards != []} id="boards" class="space-y-5">
+            <div
+              :for={
+                [%{collection: collection} | _] = boards <- Enum.chunk_by(@boards, & &1.collection_id)
+              }
+              id={"collection-#{collection.id}"}
+              class="space-y-2"
             >
-              <span class="font-medium">{board.name}</span>
-              <.icon :if={board.id == @board_id} name="hero-check-circle-solid" class="size-5" />
-            </button>
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                {collection.name}
+              </h3>
+              <button
+                :for={board <- boards}
+                id={"board-#{board.id}"}
+                type="button"
+                phx-click="choose_board"
+                phx-value-id={board.id}
+                aria-pressed={to_string(board.id == @board_id)}
+                class={[
+                  "flex w-full cursor-pointer items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors",
+                  if(board.id == @board_id,
+                    do: "border-blue-600 bg-blue-50 text-blue-900 ring-1 ring-blue-600",
+                    else: "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
+                  )
+                ]}
+              >
+                <span class="font-medium">{board.name}</span>
+                <.icon :if={board.id == @board_id} name="hero-check-circle-solid" class="size-5" />
+              </button>
+            </div>
           </div>
           <p :if={@boards == []} id="no-boards" class="text-sm text-zinc-500">
-            No boards yet. Add one in <code>priv/repo/seeds.exs</code>
-            and run <code>mix run priv/repo/seeds.exs</code>.
+            No boards yet. Import one with <code>mix cluebert.import board.json</code>
+            (see <code>docs/board-format.md</code>).
           </p>
         </section>
       </div>

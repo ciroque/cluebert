@@ -4,7 +4,9 @@ Date: 2026-11-25
 
 ## Status
 
-Accepted. Implemented in `lib/cluebert/boards.ex` (PR #4).
+Accepted. Implemented in `lib/cluebert/boards.ex` (PR #4). Partly superseded
+by ADR 9: boards are also imported from JSON and managed in the app, and
+belong to collections.
 
 ## Context
 

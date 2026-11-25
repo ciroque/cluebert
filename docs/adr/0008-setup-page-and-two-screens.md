@@ -4,7 +4,7 @@ Date: 2026-11-25
 
 ## Status
 
-Accepted.
+Accepted. Implemented in PRs #7, #8 and #9.
 
 ## Context
 

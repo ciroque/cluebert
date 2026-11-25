@@ -8,7 +8,7 @@ defmodule CluebertWeb.HostLiveTest do
   # Two categories of different lengths: A has two clues, B has one.
   defp start_game(%{conn: conn}) do
     {:ok, board} =
-      Boards.create_board(%{
+      Boards.create_board(Cluebert.DataCase.unique_collection(), %{
         name: Cluebert.DataCase.unique_board_name("Host"),
         categories: [
           %{
