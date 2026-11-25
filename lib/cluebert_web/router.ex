@@ -14,6 +14,7 @@ defmodule CluebertWeb.Router do
     pipe_through :browser
 
     live "/", SetupLive
+    live "/boards", ManageBoardsLive
     live "/games/:id/host", HostLive
     live "/games/:id", BoardLive
   end
