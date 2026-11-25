@@ -60,6 +60,13 @@ defmodule CluebertWeb.HostLiveTest do
       refute has_element?(view, "#open-clue")
     end
 
+    test "links to the player screen in its own window", %{view: view, id: id} do
+      assert has_element?(
+               view,
+               ~s(#open-player-screen[href="/games/#{id}"][target="cluebert-player-#{id}"])
+             )
+    end
+
     test "shows the play order with scores and the current team", %{view: view} = ctx do
       assert has_element?(view, "#team-#{ctx.red}[aria-current=true]", "Red")
       assert has_element?(view, "#team-#{ctx.blue}[aria-current=false]", "Blue")

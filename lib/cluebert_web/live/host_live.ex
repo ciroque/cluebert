@@ -5,7 +5,8 @@ defmodule CluebertWeb.HostLive do
   Shows the board, the play order with scores, and the current team. The
   host clicks the clue the current team calls out (ADR 2), sees its prompt
   and response, and marks it Correct or Incorrect (ADR 3). End Game
-  is always available until the game is over.
+  is always available until the game is over. A link opens the player
+  screen in a new window, for the host to move to the shared display.
 
   Every change goes through `Cluebert.GameServer`; this view renders what it
   returns and what it broadcasts, so it stays in sync with other screens.
@@ -44,15 +45,26 @@ defmodule CluebertWeb.HostLive do
           <p class="text-sm font-medium uppercase tracking-wide text-zinc-500">Host</p>
           <h1 class="text-2xl font-bold tracking-tight">{@board.name}</h1>
         </div>
-        <.button
-          :if={@game.phase != :done}
-          id="end-game"
-          phx-click="end_game"
-          data-confirm="End the game now? Scores will be final."
-          class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-        >
-          <.icon name="hero-flag" class="size-4" /> End game
-        </.button>
+        <div class="flex flex-wrap items-center gap-2">
+          <.link
+            href={~p"/games/#{@game_id}"}
+            target={"cluebert-player-#{@game_id}"}
+            rel="noopener"
+            id="open-player-screen"
+            class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+          >
+            <.icon name="hero-arrow-top-right-on-square" class="size-4" /> Open player screen
+          </.link>
+          <.button
+            :if={@game.phase != :done}
+            id="end-game"
+            phx-click="end_game"
+            data-confirm="End the game now? Scores will be final."
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+          >
+            <.icon name="hero-flag" class="size-4" /> End game
+          </.button>
+        </div>
       </div>
 
       <.scoreboard game={@game} />

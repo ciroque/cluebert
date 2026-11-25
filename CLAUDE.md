@@ -59,8 +59,9 @@ One small PR per step, each independently reviewable.
      the current team. The host clicks the clue the current team calls out
      (teams have no devices, ADR 2). The open clue's prompt and response
      show in a panel with Correct and Incorrect at its bottom right. End
-     Game is always available.
-   - `/games/:id` (`BoardLive`): the shared screen, display only. A grid
+     Game is always available. A link opens the player screen in a new
+     window, which the host moves to the shared display.
+   - `/games/:id` (`BoardLive`): the player screen, display only. A grid
      with one column per category and rows up to the largest category.
      Correctly answered clues show a checkmark. The play order, current
      team and scores are visible, and the open clue is shown large.
