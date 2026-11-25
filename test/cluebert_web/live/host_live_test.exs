@@ -60,11 +60,14 @@ defmodule CluebertWeb.HostLiveTest do
       refute has_element?(view, "#open-clue")
     end
 
-    test "links to the player screen in its own window", %{view: view, id: id} do
+    test "links to the player screen in the one shared player window", %{view: view, id: id} do
       assert has_element?(
                view,
-               ~s(#open-player-screen[href="/games/#{id}"][target="cluebert-player-#{id}"])
+               ~s(#open-player-screen[href="/games/#{id}"][target="cluebert-player"])
              )
+
+      # noopener would make browsers open a fresh window instead of reusing it.
+      refute has_element?(view, "#open-player-screen[rel]")
     end
 
     test "shows the play order with scores and the current team", %{view: view} = ctx do

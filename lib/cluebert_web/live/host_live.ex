@@ -6,7 +6,8 @@ defmodule CluebertWeb.HostLive do
   host clicks the clue the current team calls out (ADR 2), sees its prompt
   and response, and marks it Correct or Incorrect (ADR 3). End Game
   is always available until the game is over. A link opens the player
-  screen in a new window, for the host to move to the shared display.
+  screen in a window named `cluebert-player`, for the host to move to the
+  shared display; every game's link reuses that window.
 
   Every change goes through `Cluebert.GameServer`; this view renders what it
   returns and what it broadcasts, so it stays in sync with other screens.
@@ -48,8 +49,7 @@ defmodule CluebertWeb.HostLive do
         <div class="flex flex-wrap items-center gap-2">
           <.link
             href={~p"/games/#{@game_id}"}
-            target={"cluebert-player-#{@game_id}"}
-            rel="noopener"
+            target="cluebert-player"
             id="open-player-screen"
             class="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
           >
