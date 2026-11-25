@@ -20,6 +20,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0005](docs/adr/0005-board-snapshot-at-game-start.md) | The board is copied when a game starts | Accepted, implemented |
 | [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented |
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
+| [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,
@@ -49,15 +50,19 @@ One small PR per step, each independently reviewable.
    board once, builds `Cluebert.Game` from `%{clue_id => value}`, and keeps
    the full board for rendering. Every successful change is broadcast on
    `"game:<id>"`. Tests use `start_supervised!`.
-4. **UI.**
-   - `/`: choose a board and start a game.
-   - `/games/:id/host` (`HostLive`): add and remove teams, shuffle the order,
-     start; during play, the host clicks the clue the current team calls
-     out (teams have no devices, ADR 2), then sees its response with
-     Correct and Wrong buttons; End Game is always available.
-   - `/games/:id` (`BoardLive`): the shared screen. A grid with one column
-     per category, rows up to the largest category, answered clues hidden,
-     the current team and scores visible, and the open clue shown large.
+4. **UI** (ADR 8). One PR per page.
+   - `/` (setup): add and remove team names and choose a board, in any
+     order. Names are checked by `Cluebert.Game`. Start calls
+     `GameServer.start_game(board_id, team_names)`, which creates, shuffles
+     and starts the game in one step, then goes to the host screen.
+   - `/games/:id/host` (`HostLive`): the board with responses, the play
+     order, scores and the current team. The host clicks the clue the
+     current team calls out (teams have no devices, ADR 2), then marks
+     Correct or Wrong on that clue. End Game is always available.
+   - `/games/:id` (`BoardLive`): the shared screen, display only. A grid
+     with one column per category and rows up to the largest category.
+     Correctly answered clues show a checkmark. The play order, current
+     team and scores are visible, and the open clue is shown large.
 
 ## Working agreements
 
