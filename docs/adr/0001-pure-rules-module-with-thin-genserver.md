@@ -4,7 +4,8 @@ Date: 2026-11-25
 
 ## Status
 
-Accepted. Implemented in `lib/cluebert/game.ex` (PR #1).
+Accepted. Rules implemented in `lib/cluebert/game.ex` (PR #1); the
+GenServer in `lib/cluebert/game_server.ex` (PR #5).
 
 ## Context
 

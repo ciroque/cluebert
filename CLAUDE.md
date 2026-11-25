@@ -13,11 +13,11 @@ the relevant ones before changing behavior, and link to them from PRs.
 
 | ADR | Decision | Status |
 | --- | --- | --- |
-| [0001](docs/adr/0001-pure-rules-module-with-thin-genserver.md) | Pure rules module with a thin GenServer | Accepted, rules implemented |
+| [0001](docs/adr/0001-pure-rules-module-with-thin-genserver.md) | Pure rules module with a thin GenServer | Accepted, implemented |
 | [0002](docs/adr/0002-turn-based-play-without-buzzers.md) | Turn-based play without buzzers | Accepted, implemented |
 | [0003](docs/adr/0003-host-judges-and-can-end-game-anytime.md) | The host judges, and can end the game at any time | Accepted, implemented |
-| [0004](docs/adr/0004-in-memory-game-state.md) | Game state lives only in memory | Accepted |
-| [0005](docs/adr/0005-board-snapshot-at-game-start.md) | The board is copied when a game starts | Accepted |
+| [0004](docs/adr/0004-in-memory-game-state.md) | Game state lives only in memory | Accepted, implemented |
+| [0005](docs/adr/0005-board-snapshot-at-game-start.md) | The board is copied when a game starts | Accepted, implemented |
 | [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented |
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
 
