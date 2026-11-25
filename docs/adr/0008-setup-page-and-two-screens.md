@@ -56,7 +56,8 @@ kept in sync by its broadcasts (ADR 1):
 **The player screen stays open between games.** When the host starts a new
 game from a finished one's game-over screen, the new game is announced on
 the old game's topic (`{:next_game, old_id, new_id}`), and the player screen
-switches to it by itself. The host screen's link to the player screen always
+switches to it by itself. The setup page fills in the finished game's teams,
+ready to edit or clear, since a group often plays again. The host screen's link to the player screen always
 targets one named window, so it reuses a window that is already open.
 
 **Correctly answered clues stay on the board with a checkmark.** They are not

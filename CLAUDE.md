@@ -61,7 +61,8 @@ One small PR per step, each independently reviewable.
      show in a panel with Correct and Incorrect at its bottom right. End
      Game is always available. A link opens the player screen in one
      named window, which the host moves to the shared display. Game over
-     offers New game, which goes to setup with the finished game's id.
+     offers New game, which goes to setup with the finished game's id; setup
+     fills in that game's teams, with Clear all for a new group.
    - `/games/:id` (`BoardLive`): the player screen, display only. A grid
      with one column per category and rows up to the largest category.
      Correctly answered clues show a checkmark. The play order, current
