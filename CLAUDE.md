@@ -66,9 +66,9 @@ One small PR per step, each independently reviewable.
      fills in that game's teams, with Clear all for a new group.
    - `/games/:id` (`BoardLive`): the player screen, display only. A grid
      with one column per category and rows up to the largest category.
-     Correctly answered clues show a checkmark. The play order, current
+     Correctly answered clues are grayed out. The play order, current
      team and scores are visible, and the open clue is shown large.
-     Answered tiles are a 2% black with a faint checkmark. A button makes the window
+     Answered tiles are a blank 30% gray. A button makes the window
      full screen. When
      the host starts a new game from game over, it switches to that game.
 
