@@ -32,6 +32,14 @@ defmodule Cluebert.GameServer do
 
   This lets a player screen left open on the old game follow the host to
   the new one (ADR 8).
+
+  ## Finished games
+
+  A game that reaches `:done` stops itself an hour later (see
+  `start_link/1` to change this). That is long enough for the host to start
+  the next game from it, which reads its teams and tells its player screen
+  where to go, and short enough that finished games don't pile up in
+  memory. Screens can `monitor/1` a game to find out when it is gone.
   """
   use GenServer, restart: :temporary
 
@@ -42,9 +50,9 @@ defmodule Cluebert.GameServer do
   @registry Cluebert.GameRegistry
   @supervisor Cluebert.GameSupervisor
   @pubsub Cluebert.PubSub
+  @finished_ttl :timer.hours(1)
 
   @type id :: String.t()
-  @type state :: %{id: id(), board: Board.t(), game: Game.t()}
 
   ## Lifecycle
 
@@ -82,6 +90,8 @@ defmodule Cluebert.GameServer do
     * `:team_names` (required)
     * `:shuffle` (optional), passed to `Cluebert.Game.shuffle_order/2`;
       tests pass a deterministic function
+    * `:finished_ttl` (optional), how many milliseconds the process lives
+      after the game reaches `:done`; one hour by default
   """
   def start_link(opts) do
     id = Keyword.fetch!(opts, :id)
@@ -107,8 +117,21 @@ defmodule Cluebert.GameServer do
     Phoenix.PubSub.broadcast(@pubsub, topic(old_id), {:next_game, old_id, new_id})
   end
 
+  @doc """
+  Monitors a game's process, so the caller gets a `:DOWN` message when the
+  game stops, whether it finished, timed out or crashed. Returns
+  `{:error, :not_found}` if there is no such game.
+  """
+  @spec monitor(id()) :: {:ok, reference()} | {:error, :not_found}
+  def monitor(id) do
+    case Registry.lookup(@registry, id) do
+      [{pid, _}] -> {:ok, Process.monitor(pid)}
+      [] -> {:error, :not_found}
+    end
+  end
+
   @doc "Returns the game's id, board and current `%Cluebert.Game{}`."
-  @spec get(id()) :: {:ok, state()} | {:error, :not_found}
+  @spec get(id()) :: {:ok, %{id: id(), board: Board.t(), game: Game.t()}} | {:error, :not_found}
   def get(id), do: call(id, :get)
 
   ## Actions during play, one per `Cluebert.Game` function
@@ -134,15 +157,20 @@ defmodule Cluebert.GameServer do
     board = Keyword.fetch!(opts, :board)
     team_names = Keyword.fetch!(opts, :team_names)
     shuffle = Keyword.get(opts, :shuffle, &Enum.shuffle/1)
+    finished_ttl = Keyword.get(opts, :finished_ttl, @finished_ttl)
 
     case new_game(board, team_names, shuffle) do
-      {:ok, game} -> {:ok, %{id: id, board: board, game: game}}
-      {:error, reason} -> {:stop, reason}
+      {:ok, game} ->
+        {:ok, %{id: id, board: board, game: game, finished_ttl: finished_ttl, stopping?: false}}
+
+      {:error, reason} ->
+        {:stop, reason}
     end
   end
 
   @impl true
-  def handle_call(:get, _from, state), do: {:reply, {:ok, state}, state}
+  def handle_call(:get, _from, state),
+    do: {:reply, {:ok, Map.take(state, [:id, :board, :game])}, state}
 
   def handle_call({:select, team_id, clue_id}, _from, state),
     do: apply_rule(state, &Game.select(&1, team_id, clue_id))
@@ -151,6 +179,9 @@ defmodule Cluebert.GameServer do
     do: apply_rule(state, &Game.judge(&1, judgment))
 
   def handle_call(:end_game, _from, state), do: apply_rule(state, &Game.end_game/1)
+
+  @impl true
+  def handle_info(:finished_ttl_expired, state), do: {:stop, :normal, state}
 
   ## Helpers
 
@@ -181,8 +212,15 @@ defmodule Cluebert.GameServer do
 
   defp update(state, game) do
     Phoenix.PubSub.broadcast(@pubsub, topic(state.id), {:game_updated, state.id, game})
-    %{state | game: game}
+    schedule_stop(%{state | game: game})
   end
+
+  defp schedule_stop(%{game: %Game{phase: :done}, stopping?: false} = state) do
+    Process.send_after(self(), :finished_ttl_expired, state.finished_ttl)
+    %{state | stopping?: true}
+  end
+
+  defp schedule_stop(state), do: state
 
   defp call(id, request) do
     GenServer.call(via(id), request)

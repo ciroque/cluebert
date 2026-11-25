@@ -62,6 +62,10 @@ defmodule CluebertWeb.BoardLiveTest do
       refute has_element?(view, "header")
     end
 
+    test "offers a full-screen button", %{view: view} do
+      assert has_element?(view, ~s(#fullscreen-button[phx-hook$="Fullscreen"]))
+    end
+
     test "is display only", %{view: view} do
       refute has_element?(view, "#board button")
       refute has_element?(view, "#end-game")
@@ -116,6 +120,16 @@ defmodule CluebertWeb.BoardLiveTest do
       GameServer.announce_next_game(id, "the-next-game")
 
       assert_redirect(view, "/games/the-next-game")
+    end
+
+    test "says so when the game stops", %{view: view, id: id} do
+      [{pid, _}] = Registry.lookup(Cluebert.GameRegistry, id)
+      ref = Process.monitor(pid)
+      stop_supervised!(GameServer)
+      assert_receive {:DOWN, ^ref, :process, ^pid, _}
+
+      assert has_element?(view, "#game-missing")
+      refute has_element?(view, "#board")
     end
   end
 

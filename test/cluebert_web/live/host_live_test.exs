@@ -166,14 +166,11 @@ defmodule CluebertWeb.HostLiveTest do
       assert has_element?(view, "#clue-#{b1.id}[data-state=open]")
     end
 
-    test "goes home if the game is gone", %{view: view, id: id} do
+    test "goes home as soon as the game is gone", %{view: view, id: id} do
       [{pid, _}] = Registry.lookup(Cluebert.GameRegistry, id)
-      ref = Process.monitor(pid)
       Process.exit(pid, :kill)
-      assert_receive {:DOWN, ^ref, :process, ^pid, :killed}
 
-      assert {:error, {:live_redirect, %{to: "/"}}} =
-               render_click(view, "end_game", %{})
+      assert {"/", %{"error" => "That game no longer exists."}} = assert_redirect(view)
     end
   end
 

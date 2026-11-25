@@ -20,3 +20,6 @@
 
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
+
+/* The player screen's full-screen button is only needed until it's used. */
+:root:fullscreen #fullscreen-button { display: none }

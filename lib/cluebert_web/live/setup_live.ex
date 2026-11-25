@@ -9,7 +9,9 @@ defmodule CluebertWeb.SetupLive do
 
   When the host comes here from a finished game (`/?from=<game id>`), its
   teams are filled in, in the order they were entered, ready to edit or
-  clear. Start also announces the new game to that game's subscribers, so a
+  clear, and the board after the one just played is chosen (wrapping to the
+  first), so a group working through a collection gets the next lesson.
+  Otherwise the first board is chosen. Start also announces the new game to that game's subscribers, so a
   player screen still open on it switches to the new game.
   """
   use CluebertWeb, :live_view
@@ -19,14 +21,15 @@ defmodule CluebertWeb.SetupLive do
   @impl true
   def mount(params, _session, socket) do
     boards = Boards.list_boards()
+    previous = previous_game(params["from"])
 
     {:ok,
      socket
      |> assign(:page_title, "New game")
      |> assign(:from, params["from"])
      |> assign(:boards, boards)
-     |> assign(:board_id, boards |> List.first() |> then(&(&1 && &1.id)))
-     |> assign_carried_over_teams(params["from"])
+     |> assign(:board_id, default_board_id(boards, previous && previous.board.id))
+     |> assign_carried_over_teams(previous)
      |> assign(:min_teams, Game.min_teams())
      |> assign_team_form(%{"name" => ""})}
   end
@@ -218,21 +221,33 @@ defmodule CluebertWeb.SetupLive do
     end
   end
 
+  defp previous_game(nil), do: nil
+
+  defp previous_game(from) do
+    case GameServer.get(from) do
+      {:ok, previous} -> previous
+      {:error, :not_found} -> nil
+    end
+  end
+
+  # The board after the one just played, wrapping around; the first board
+  # if nothing was played or that board is gone.
+  defp default_board_id([], _played_id), do: nil
+
+  defp default_board_id(boards, played_id) do
+    case Enum.find_index(boards, &(&1.id == played_id)) do
+      nil -> hd(boards).id
+      index -> Enum.at(boards, rem(index + 1, length(boards))).id
+    end
+  end
+
   # Teams of the game the host came from, in the order they were entered
   # (team ids count up), not the shuffled play order.
   defp assign_carried_over_teams(socket, nil), do: assign(socket, teams: [], carried_over: false)
 
-  defp assign_carried_over_teams(socket, from) do
-    case GameServer.get(from) do
-      {:ok, %{game: game}} ->
-        teams =
-          game.teams |> Enum.sort_by(fn {id, _} -> id end) |> Enum.map(fn {_, t} -> t.name end)
-
-        assign(socket, teams: teams, carried_over: teams != [])
-
-      {:error, :not_found} ->
-        assign(socket, teams: [], carried_over: false)
-    end
+  defp assign_carried_over_teams(socket, %{game: game}) do
+    teams = game.teams |> Enum.sort_by(fn {id, _} -> id end) |> Enum.map(fn {_, t} -> t.name end)
+    assign(socket, teams: teams, carried_over: teams != [])
   end
 
   defp assign_team_form(socket, params, error \\ nil) do
