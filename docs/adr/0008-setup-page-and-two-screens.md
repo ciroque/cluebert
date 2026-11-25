@@ -4,7 +4,8 @@ Date: 2026-11-25
 
 ## Status
 
-Accepted. Implemented in PRs #7, #8 and #9.
+Accepted. Implemented in PRs #7, #8 and #9, with polish in step 7 of the
+build plan.
 
 ## Context
 
@@ -57,11 +58,17 @@ kept in sync by its broadcasts (ADR 1):
 game from a finished one's game-over screen, the new game is announced on
 the old game's topic (`{:next_game, old_id, new_id}`), and the player screen
 switches to it by itself. The setup page fills in the finished game's teams,
-ready to edit or clear, since a group often plays again. The host screen's link to the player screen always
+ready to edit or clear, since a group often plays again, and chooses the
+board after the one just played. The host screen's link to the player screen always
 targets one named window, so it reuses a window that is already open.
 
-**Correctly answered clues stay on the board with a checkmark.** They are not
-hidden. `Cluebert.Game` already tracks which clues are answered, so this
+The player screen has a full-screen button, hidden once the window is full
+screen. If its game stops (a finished game stops an hour after it ends, ADR
+4), it says there is no game here rather than showing a frozen board.
+
+**Correctly answered clues stay on the board, dimmed to a 30% gray with a
+checkmark.** They are not hidden, but no longer compete with the clues
+still in play. `Cluebert.Game` already tracks which clues are answered, so this
 needs no rule change. It does not record which team answered.
 
 ## Consequences
