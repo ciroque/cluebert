@@ -4,7 +4,7 @@ Date: 2026-11-25
 
 ## Status
 
-Accepted. Not yet implemented.
+Accepted. Implemented in `lib/cluebert/boards.ex` (PR #4).
 
 ## Context
 

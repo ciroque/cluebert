@@ -18,7 +18,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0003](docs/adr/0003-host-judges-and-can-end-game-anytime.md) | The host judges, and can end the game at any time | Accepted, implemented |
 | [0004](docs/adr/0004-in-memory-game-state.md) | Game state lives only in memory | Accepted |
 | [0005](docs/adr/0005-board-snapshot-at-game-start.md) | The board is copied when a game starts | Accepted |
-| [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted |
+| [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented |
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
 
 If a change would contradict an ADR, stop and say so instead of working around
