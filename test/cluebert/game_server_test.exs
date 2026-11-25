@@ -18,7 +18,7 @@ defmodule Cluebert.GameServerTest do
         ]
 
     name = "Board #{System.unique_integer([:positive])}"
-    {:ok, board} = Boards.create_board(%{name: name, categories: categories})
+    {:ok, board} = Boards.create_board(unique_collection(), %{name: name, categories: categories})
     Boards.get_board!(board.id)
   end
 

@@ -80,10 +80,15 @@ boards = [
   }
 ]
 
+{:ok, collection} = Boards.get_or_create_collection(Boards.default_collection_name())
+
 for %{name: name} = attrs <- boards do
   {:ok, _board} =
     Repo.transact(fn ->
-      Repo.delete_all(from b in Board, where: b.name == ^name)
-      Boards.create_board(attrs)
+      Repo.delete_all(
+        from b in Board, where: b.collection_id == ^collection.id and b.name == ^name
+      )
+
+      Boards.create_board(collection, attrs)
     end)
 end

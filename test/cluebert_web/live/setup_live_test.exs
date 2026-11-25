@@ -5,9 +5,9 @@ defmodule CluebertWeb.SetupLiveTest do
 
   alias Cluebert.{Boards, GameServer}
 
-  defp create_board(name) do
+  defp create_board(name, collection \\ Cluebert.DataCase.unique_collection()) do
     {:ok, board} =
-      Boards.create_board(%{
+      Boards.create_board(collection, %{
         name: Cluebert.DataCase.unique_board_name(name),
         categories: [%{title: "T", clues: [%{prompt: "p", response: "r", value: 100}]}]
       })
@@ -29,8 +29,9 @@ defmodule CluebertWeb.SetupLiveTest do
 
   describe "boards" do
     test "lists boards with the first one chosen", %{conn: conn} do
-      apple = create_board("Apple")
-      zebra = create_board("Zebra")
+      collection = Cluebert.DataCase.unique_collection()
+      apple = create_board("Apple", collection)
+      zebra = create_board("Zebra", collection)
 
       {:ok, view, _html} = live(conn, ~p"/")
 
@@ -226,7 +227,11 @@ defmodule CluebertWeb.SetupLiveTest do
     end
 
     test "shows an error for a board with no clues", %{conn: conn} do
-      {:ok, _} = Boards.create_board(%{name: Cluebert.DataCase.unique_board_name("Empty")})
+      {:ok, _} =
+        Boards.create_board(Cluebert.DataCase.unique_collection(), %{
+          name: Cluebert.DataCase.unique_board_name("Empty")
+        })
+
       {:ok, view, _html} = live(conn, ~p"/")
       add_team(view, "Red")
       add_team(view, "Blue")

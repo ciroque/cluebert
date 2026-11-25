@@ -41,6 +41,18 @@ defmodule Cluebert.DataCase do
   def unique_board_name(prefix), do: "#{prefix} #{System.unique_integer([:positive])}"
 
   @doc """
+  Creates a collection that no other test uses.
+
+  Tests that create boards should put them here rather than in the shared
+  default collection: concurrent sandboxed tests inserting the same
+  collection row would wait on each other.
+  """
+  def unique_collection(prefix \\ "Collection") do
+    {:ok, collection} = Cluebert.Boards.get_or_create_collection(unique_board_name(prefix))
+    collection
+  end
+
+  @doc """
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
