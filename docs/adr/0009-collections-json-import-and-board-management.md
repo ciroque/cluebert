@@ -5,8 +5,9 @@ Date: 2026-11-25
 ## Status
 
 Accepted. Partly supersedes ADR 6: boards are no longer defined only through
-seeds. Collections and JSON import implemented in PR #10; the management UI
-and upload page are still to come.
+seeds. Collections and JSON import implemented in PR #10; managing
+collections and boards in PR #11. The board editor and upload page are still
+to come.
 
 ## Context
 

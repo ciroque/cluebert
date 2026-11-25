@@ -21,7 +21,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented; partly superseded by ADR 9 |
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
 | [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted, implemented |
-| [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted, import implemented |
+| [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted, partly implemented |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,
@@ -78,9 +78,14 @@ Steps 1–4 are done. The next PRs, in order:
    unique by name within a collection, defaulting to "General".
    `Cluebert.Boards.Import` (format in `docs/board-format.md`),
    `mix cluebert.import`, and seeds from `priv/boards/*.json`.
-6. **Board management UI** (ADR 9). Create, edit, reorder and delete
-   collections, boards, categories and clues, plus a JSON upload page for
-   the deployed app.
+6. **Board management UI** (ADR 9), in three PRs:
+   - 6a. `/boards` (`ManageBoardsLive`): collections and their boards.
+     Create, rename and delete collections (only when empty); add, rename,
+     move and delete boards. Header navigation.
+   - 6b. `/boards/:id`: the board editor. Add, edit, delete and reorder
+     (up/down buttons) categories and clues.
+   - 6c. `/boards/import`: paste or upload JSON, with an option to replace
+     existing boards. No export.
 7. **Polish and cleanup.** Stop finished games an hour after they end
    (later than the team carry-over and player-screen hand-off need).
    Pre-select a different board than the one just played, add a
