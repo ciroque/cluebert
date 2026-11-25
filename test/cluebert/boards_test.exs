@@ -19,6 +19,15 @@ defmodule Cluebert.BoardsTest do
     )
   end
 
+  describe "list_boards/0" do
+    test "lists boards by name" do
+      {:ok, _} = Boards.create_board(%{name: "Zebra"})
+      {:ok, _} = Boards.create_board(%{name: "Apple"})
+
+      assert Enum.map(Boards.list_boards(), & &1.name) == ["Apple", "Zebra"]
+    end
+  end
+
   describe "create_board/1" do
     test "creates a board with categories and clues positioned in list order" do
       assert {:ok, %Board{id: id}} = Boards.create_board(board_attrs())
