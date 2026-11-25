@@ -12,9 +12,6 @@ defmodule Cluebert.Application do
       Cluebert.Repo,
       {DNSCluster, query: Application.get_env(:cluebert, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Cluebert.PubSub},
-      # Start a worker by calling: Cluebert.Worker.start_link(arg)
-      # {Cluebert.Worker, arg},
-      # Start to serve requests, typically the last entry
       CluebertWeb.Endpoint
     ]
 

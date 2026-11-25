@@ -19,7 +19,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0004](docs/adr/0004-in-memory-game-state.md) | Game state lives only in memory | Accepted |
 | [0005](docs/adr/0005-board-snapshot-at-game-start.md) | The board is copied when a game starts | Accepted |
 | [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted |
-| [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Proposed |
+| [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,
@@ -52,8 +52,9 @@ One small PR per step, each independently reviewable.
 4. **UI.**
    - `/`: choose a board and start a game.
    - `/games/:id/host` (`HostLive`): add and remove teams, shuffle the order,
-     start; during play, show the open clue's response with Correct and
-     Wrong buttons; End Game is always available.
+     start; during play, the host clicks the clue the current team calls
+     out (teams have no devices, ADR 2), then sees its response with
+     Correct and Wrong buttons; End Game is always available.
    - `/games/:id` (`BoardLive`): the shared screen. A grid with one column
      per category, rows up to the largest category, answered clues hidden,
      the current team and scores visible, and the open clue shown large.
