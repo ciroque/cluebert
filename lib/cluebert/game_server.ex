@@ -12,6 +12,10 @@ defmodule Cluebert.GameServer do
   The board is copied in when the game starts (ADR 5); later edits to the
   board in the database never reach a running game.
 
+  A game is created already playing (ADR 8): the teams are added, the play
+  order is randomized and the game is started inside `start_game/2`, so no
+  one ever sees a game in `:setup`.
+
   ## Broadcasts
 
   After every successful change, subscribers to `topic(id)` receive:
@@ -37,18 +41,22 @@ defmodule Cluebert.GameServer do
   ## Lifecycle
 
   @doc """
-  Starts a new game for the board with `board_id`, under the game
-  supervisor. The board is loaded once, here.
+  Starts a new game for the board with `board_id` and the given teams, under
+  the game supervisor. The board is loaded once, here.
 
-  Returns `{:error, :invalid_board}` if the board has no clues. Raises
+  The teams are added in order, then shuffled into a random play order, and
+  the game is started. Returns an error from `Cluebert.Game` if the board
+  has no clues (`:invalid_board`), there are no teams (`:no_teams`), or a
+  name is rejected (see `Cluebert.Game.check_team_name/2`). Raises
   `Ecto.NoResultsError` if there is no such board.
   """
-  @spec start_game(term()) :: {:ok, id()} | {:error, Game.error()}
-  def start_game(board_id) do
+  @spec start_game(term(), [String.t()]) :: {:ok, id()} | {:error, Game.error()}
+  def start_game(board_id, team_names) do
     board = Boards.get_board!(board_id)
     id = new_id()
+    child = {__MODULE__, id: id, board: board, team_names: team_names}
 
-    case DynamicSupervisor.start_child(@supervisor, {__MODULE__, id: id, board: board}) do
+    case DynamicSupervisor.start_child(@supervisor, child) do
       {:ok, _pid} -> {:ok, id}
       {:error, reason} -> {:error, reason}
     end
@@ -57,9 +65,14 @@ defmodule Cluebert.GameServer do
   @doc """
   Starts a game process linked to the caller.
 
-  Use `start_game/1` in application code; this is the child spec entry
-  point. Options: `:id` (required) and `:board`, a board with categories
-  and clues preloaded (required).
+  Use `start_game/2` in application code; this is the child spec entry
+  point. Options:
+
+    * `:id` (required)
+    * `:board` (required), with categories and clues preloaded
+    * `:team_names` (required)
+    * `:shuffle` (optional), passed to `Cluebert.Game.shuffle_order/2`;
+      tests pass a deterministic function
   """
   def start_link(opts) do
     id = Keyword.fetch!(opts, :id)
@@ -78,25 +91,7 @@ defmodule Cluebert.GameServer do
   @spec get(id()) :: {:ok, state()} | {:error, :not_found}
   def get(id), do: call(id, :get)
 
-  ## Actions, one per `Cluebert.Game` function
-
-  @doc "See `Cluebert.Game.add_team/2`."
-  @spec add_team(id(), String.t()) ::
-          {:ok, Game.t(), Game.team_id()} | {:error, Game.error() | :not_found}
-  def add_team(id, name), do: call(id, {:add_team, name})
-
-  @doc "See `Cluebert.Game.remove_team/2`."
-  @spec remove_team(id(), Game.team_id()) :: {:ok, Game.t()} | {:error, Game.error() | :not_found}
-  def remove_team(id, team_id), do: call(id, {:remove_team, team_id})
-
-  @doc "See `Cluebert.Game.shuffle_order/2`."
-  @spec shuffle_order(id(), ([Game.team_id()] -> [Game.team_id()])) ::
-          {:ok, Game.t()} | {:error, Game.error() | :not_found}
-  def shuffle_order(id, shuffle \\ &Enum.shuffle/1), do: call(id, {:shuffle_order, shuffle})
-
-  @doc "See `Cluebert.Game.start/1`."
-  @spec start(id()) :: {:ok, Game.t()} | {:error, Game.error() | :not_found}
-  def start(id), do: call(id, :start)
+  ## Actions during play, one per `Cluebert.Game` function
 
   @doc "See `Cluebert.Game.select/3`."
   @spec select(id(), Game.team_id(), Game.clue_id()) ::
@@ -117,8 +112,10 @@ defmodule Cluebert.GameServer do
   def init(opts) do
     id = Keyword.fetch!(opts, :id)
     board = Keyword.fetch!(opts, :board)
+    team_names = Keyword.fetch!(opts, :team_names)
+    shuffle = Keyword.get(opts, :shuffle, &Enum.shuffle/1)
 
-    case Game.new(clue_values(board)) do
+    case new_game(board, team_names, shuffle) do
       {:ok, game} -> {:ok, %{id: id, board: board, game: game}}
       {:error, reason} -> {:stop, reason}
     end
@@ -126,21 +123,6 @@ defmodule Cluebert.GameServer do
 
   @impl true
   def handle_call(:get, _from, state), do: {:reply, {:ok, state}, state}
-
-  def handle_call({:add_team, name}, _from, state) do
-    case Game.add_team(state.game, name) do
-      {:ok, game, team_id} -> {:reply, {:ok, game, team_id}, update(state, game)}
-      {:error, _} = error -> {:reply, error, state}
-    end
-  end
-
-  def handle_call({:remove_team, team_id}, _from, state),
-    do: apply_rule(state, &Game.remove_team(&1, team_id))
-
-  def handle_call({:shuffle_order, shuffle}, _from, state),
-    do: apply_rule(state, &Game.shuffle_order(&1, shuffle))
-
-  def handle_call(:start, _from, state), do: apply_rule(state, &Game.start/1)
 
   def handle_call({:select, team_id, clue_id}, _from, state),
     do: apply_rule(state, &Game.select(&1, team_id, clue_id))
@@ -151,6 +133,24 @@ defmodule Cluebert.GameServer do
   def handle_call(:end_game, _from, state), do: apply_rule(state, &Game.end_game/1)
 
   ## Helpers
+
+  # Runs the game through :setup with Cluebert.Game's own functions.
+  defp new_game(board, team_names, shuffle) do
+    with {:ok, game} <- Game.new(clue_values(board)),
+         {:ok, game} <- add_teams(game, team_names),
+         {:ok, game} <- Game.shuffle_order(game, shuffle) do
+      Game.start(game)
+    end
+  end
+
+  defp add_teams(game, names) do
+    Enum.reduce_while(names, {:ok, game}, fn name, {:ok, game} ->
+      case Game.add_team(game, name) do
+        {:ok, game, _team_id} -> {:cont, {:ok, game}}
+        {:error, _} = error -> {:halt, error}
+      end
+    end)
+  end
 
   defp apply_rule(state, rule) do
     case rule.(state.game) do
