@@ -21,7 +21,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented; partly superseded by ADR 9 |
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
 | [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted, implemented |
-| [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted, partly implemented |
+| [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted, implemented |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,

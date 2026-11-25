@@ -35,6 +35,9 @@ defmodule CluebertWeb.ManageBoardsLive do
           Collections group boards, like "Primary Lessons" or "General Knowledge".
         </:subtitle>
         <:actions>
+          <.button id="import-boards" navigate={~p"/boards/import"}>
+            <.icon name="hero-arrow-up-tray" class="size-4" /> Import JSON
+          </.button>
           <.button id="new-collection" variant="primary" phx-click="new_collection">
             <.icon name="hero-plus" class="size-4" /> New collection
           </.button>
@@ -46,7 +49,10 @@ defmodule CluebertWeb.ManageBoardsLive do
       </div>
 
       <p :if={@collections == []} id="no-collections" class="text-zinc-500">
-        No collections yet. Create one, or import boards with <code>mix cluebert.import</code>.
+        No collections yet. Create one, or <.link
+          navigate={~p"/boards/import"}
+          class="text-blue-700 hover:underline"
+        >import boards</.link>.
       </p>
 
       <section

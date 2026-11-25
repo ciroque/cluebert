@@ -15,6 +15,8 @@ defmodule CluebertWeb.Router do
 
     live "/", SetupLive
     live "/boards", ManageBoardsLive
+    # Before /boards/:id, which would otherwise match "import".
+    live "/boards/import", ImportBoardsLive
     live "/boards/:id", BoardEditorLive
     live "/games/:id/host", HostLive
     live "/games/:id", BoardLive
