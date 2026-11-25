@@ -46,6 +46,98 @@ defmodule Cluebert.BoardsTest do
     end
   end
 
+  describe "managing collections" do
+    test "create, rename and list them by name with their boards and clue counts" do
+      {:ok, zoo} = Boards.create_collection(%{name: unique_board_name("Zoo")})
+      {:ok, art} = Boards.create_collection(%{name: "  " <> unique_board_name("Art") <> " "})
+      {:ok, _} = Boards.create_board(zoo, %{name: "Empty"})
+
+      {:ok, _} =
+        Boards.create_board(zoo, %{
+          name: "Full",
+          categories: [
+            %{title: "A", clues: [clue(1), clue(2)]},
+            %{title: "B", clues: [clue(1)]}
+          ]
+        })
+
+      {:ok, art} = Boards.update_collection(art, %{name: art.name <> " renamed"})
+
+      listed =
+        Boards.list_collections_with_boards() |> Enum.filter(&(&1.id in [zoo.id, art.id]))
+
+      assert Enum.map(listed, & &1.id) == [art.id, zoo.id]
+      assert String.ends_with?(hd(listed).name, " renamed")
+
+      assert [%{name: "Empty", clue_count: 0}, %{name: "Full", clue_count: 3}] =
+               List.last(listed).boards
+    end
+
+    test "names must be unique and not blank" do
+      name = unique_board_name("Taken")
+      {:ok, _} = Boards.create_collection(%{name: name})
+
+      assert {:error, changeset} = Boards.create_collection(%{name: name})
+      assert "is already a collection" in errors_on(changeset).name
+      assert {:error, changeset} = Boards.create_collection(%{name: " "})
+      assert "can't be blank" in errors_on(changeset).name
+    end
+
+    test "only an empty collection can be deleted", %{collection: collection} do
+      {:ok, board} = Boards.create_board(collection, %{name: "Keep"})
+
+      assert {:error, changeset} = Boards.delete_collection(collection)
+      assert "still has boards; move or delete them first" in errors_on(changeset).boards
+
+      {:ok, _} = Boards.delete_board(board)
+      assert {:ok, _} = Boards.delete_collection(collection)
+      assert_raise Ecto.NoResultsError, fn -> Boards.get_collection!(collection.id) end
+    end
+  end
+
+  describe "managing boards" do
+    test "rename keeps categories and clues", %{collection: collection} do
+      {:ok, board} = Boards.create_board(collection, board_attrs())
+
+      assert {:ok, %Board{name: "Renamed"}} = Boards.rename_board(board, %{name: " Renamed "})
+      assert length(Boards.get_board!(board.id).categories) == 2
+    end
+
+    test "rename rejects a name taken in the same collection", %{collection: collection} do
+      {:ok, _} = Boards.create_board(collection, %{name: "Taken"})
+      {:ok, board} = Boards.create_board(collection, %{name: "Mine"})
+
+      assert {:error, changeset} = Boards.rename_board(board, %{name: "Taken"})
+      assert "has already been taken in this collection" in errors_on(changeset).name
+    end
+
+    test "move puts the board in another collection", %{collection: collection} do
+      other = unique_collection()
+      {:ok, board} = Boards.create_board(collection, board_attrs())
+
+      assert {:ok, moved} = Boards.move_board(board, other)
+      assert Boards.get_board_summary!(moved.id).collection.id == other.id
+      assert length(Boards.get_board!(board.id).categories) == 2
+    end
+
+    test "move fails if the target has a board with the same name", %{collection: collection} do
+      other = unique_collection()
+      {:ok, _} = Boards.create_board(other, %{name: "Same"})
+      {:ok, board} = Boards.create_board(collection, %{name: "Same"})
+
+      assert {:error, changeset} = Boards.move_board(board, other)
+      assert "has already been taken in this collection" in errors_on(changeset).name
+    end
+
+    test "delete removes the board with its categories and clues", %{collection: collection} do
+      {:ok, board} = Boards.create_board(collection, board_attrs())
+
+      assert {:ok, _} = Boards.delete_board(board)
+      assert_raise Ecto.NoResultsError, fn -> Boards.get_board!(board.id) end
+      assert Repo.aggregate(Category, :count) == 0
+    end
+  end
+
   describe "list_boards/0" do
     test "lists boards by collection name, then board name, with the collection loaded" do
       zoo = unique_collection("Zoo")

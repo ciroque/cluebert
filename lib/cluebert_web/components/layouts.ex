@@ -44,13 +44,29 @@ defmodule CluebertWeb.Layouts do
   def app(assigns) do
     ~H"""
     <header class="border-b border-zinc-200 bg-white px-4 sm:px-6 lg:px-8">
-      <div class="mx-auto flex h-14 max-w-5xl items-center">
+      <div class="mx-auto flex h-14 max-w-5xl items-center justify-between">
         <.link
           navigate={~p"/"}
           class="text-lg font-bold tracking-tight text-zinc-900 transition-colors hover:text-blue-700"
         >
           Cluebert
         </.link>
+        <nav id="main-nav" class="flex items-center gap-1 text-sm font-medium">
+          <.link
+            navigate={~p"/"}
+            id="nav-new-game"
+            class="rounded-md px-3 py-1.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            New game
+          </.link>
+          <.link
+            navigate={~p"/boards"}
+            id="nav-boards"
+            class="rounded-md px-3 py-1.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
+            Boards
+          </.link>
+        </nav>
       </div>
     </header>
 
