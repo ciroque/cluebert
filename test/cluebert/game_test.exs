@@ -47,6 +47,22 @@ defmodule Cluebert.GameTest do
     end
   end
 
+  describe "check_team_name/2" do
+    test "returns the trimmed name when it is free" do
+      assert {:ok, "Red"} = Game.check_team_name([], "  Red ")
+      assert {:ok, "Blue"} = Game.check_team_name(["Red"], "Blue")
+    end
+
+    test "rejects blank and non-string names" do
+      assert {:error, :invalid_name} = Game.check_team_name([], "   ")
+      assert {:error, :invalid_name} = Game.check_team_name([], :red)
+    end
+
+    test "rejects names already taken, ignoring case and surrounding space" do
+      assert {:error, :duplicate_name} = Game.check_team_name(["Red"], " red ")
+    end
+  end
+
   describe "setup" do
     test "add_team assigns ids, zero scores, and appends to play order" do
       {:ok, game, red} = Game.add_team(new_game(), "  Red ")

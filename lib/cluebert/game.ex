@@ -8,6 +8,8 @@ defmodule Cluebert.Game do
   ## Rules
 
     * Teams are added during `:setup`. An individual player is a team of one.
+      Team names are trimmed, must not be blank, and must be unique ignoring
+      case (`check_team_name/2`).
     * The play order can be shuffled during `:setup` and is locked by `start/1`.
     * On their turn, the current team selects any clue that has not been
       answered. A clue can be selected any number of times until it is
@@ -104,17 +106,14 @@ defmodule Cluebert.Game do
   are rejected. New teams are appended to the end of the play order.
   """
   @spec add_team(t(), String.t()) :: {:ok, t(), team_id()} | {:error, error()}
-  def add_team(%__MODULE__{phase: :setup} = game, name) when is_binary(name) do
-    name = String.trim(name)
+  def add_team(%__MODULE__{phase: :setup} = game, name) do
+    existing = Enum.map(game.teams, fn {_id, team} -> team.name end)
 
-    cond do
-      name == "" ->
-        {:error, :invalid_name}
+    case check_team_name(existing, name) do
+      {:error, _} = error ->
+        error
 
-      name_taken?(game, name) ->
-        {:error, :duplicate_name}
-
-      true ->
+      {:ok, name} ->
         id = game.next_team_id
 
         game = %{
@@ -129,8 +128,29 @@ defmodule Cluebert.Game do
     end
   end
 
-  def add_team(%__MODULE__{phase: :setup}, _name), do: {:error, :invalid_name}
   def add_team(%__MODULE__{}, _name), do: {:error, :wrong_phase}
+
+  @doc """
+  Checks a team name against the names already taken, before or without a
+  game. Returns the trimmed name.
+
+  Used by `add_team/2`, and by setup screens that collect names before a
+  game exists (ADR 8), so the rule lives only here.
+  """
+  @spec check_team_name([String.t()], term()) ::
+          {:ok, String.t()} | {:error, :invalid_name | :duplicate_name}
+  def check_team_name(existing, name) when is_list(existing) and is_binary(name) do
+    name = String.trim(name)
+    down = String.downcase(name)
+
+    cond do
+      name == "" -> {:error, :invalid_name}
+      Enum.any?(existing, &(String.downcase(&1) == down)) -> {:error, :duplicate_name}
+      true -> {:ok, name}
+    end
+  end
+
+  def check_team_name(existing, _name) when is_list(existing), do: {:error, :invalid_name}
 
   @doc "Removes a team during `:setup`."
   @spec remove_team(t(), team_id()) :: {:ok, t()} | {:error, error()}
@@ -249,9 +269,4 @@ defmodule Cluebert.Game do
   @spec remaining_clues(t()) :: [clue_id()]
   def remaining_clues(%__MODULE__{} = game),
     do: game.clues |> Map.keys() |> Enum.reject(&MapSet.member?(game.answered, &1))
-
-  defp name_taken?(game, name) do
-    down = String.downcase(name)
-    Enum.any?(game.teams, fn {_id, team} -> String.downcase(team.name) == down end)
-  end
 end
