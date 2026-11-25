@@ -20,7 +20,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0005](docs/adr/0005-board-snapshot-at-game-start.md) | The board is copied when a game starts | Accepted |
 | [0006](docs/adr/0006-any-board-shape-defined-by-seeds.md) | Boards have any shape, defined through seeds for now | Accepted, implemented |
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
-| [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Proposed |
+| [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,
