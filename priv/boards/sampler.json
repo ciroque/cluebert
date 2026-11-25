@@ -1,0 +1,50 @@
+{
+  "collection": "General",
+  "name": "Sampler",
+  "categories": [
+    {
+      "title": "Space",
+      "clues": [
+        { "prompt": "The planet closest to the Sun", "response": "Mercury" },
+        { "prompt": "The name of our galaxy", "response": "The Milky Way" },
+        { "prompt": "The largest planet in our solar system", "response": "Jupiter" },
+        { "prompt": "In 1969 he became the first person to walk on the Moon", "response": "Neil Armstrong" },
+        { "prompt": "In 2006 this former planet was reclassified as a dwarf planet", "response": "Pluto" }
+      ]
+    },
+    {
+      "title": "Animals",
+      "clues": [
+        { "prompt": "The largest animal known to have ever lived", "response": "The blue whale" },
+        { "prompt": "A group of crows is called this", "response": "A murder" },
+        { "prompt": "The only mammal capable of true sustained flight", "response": "The bat" },
+        { "prompt": "The number of hearts an octopus has", "response": "Three" }
+      ]
+    },
+    {
+      "title": "Food & Drink",
+      "clues": [
+        { "prompt": "The main ingredient in guacamole", "response": "Avocado" },
+        { "prompt": "The cheese traditionally used on a pizza Margherita", "response": "Mozzarella" },
+        { "prompt": "Saffron comes from this part of the crocus flower", "response": "The stigma" }
+      ]
+    },
+    {
+      "title": "Words",
+      "clues": [
+        { "prompt": "A word that reads the same forwards and backwards", "response": "A palindrome" },
+        { "prompt": "The opposite of an antonym", "response": "A synonym" },
+        { "prompt": "The Q in FAQ", "response": "Question" },
+        { "prompt": "A word formed from initials and pronounced as a word, like scuba", "response": "An acronym" },
+        { "prompt": "A word for a word that imitates the sound it describes, like buzz", "response": "Onomatopoeia" }
+      ]
+    },
+    {
+      "title": "Geography",
+      "clues": [
+        { "prompt": "The capital of Australia", "response": "Canberra" },
+        { "prompt": "The longest river in South America", "response": "The Amazon" }
+      ]
+    }
+  ]
+}

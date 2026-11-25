@@ -185,11 +185,16 @@ defmodule Cluebert.BoardsTest do
   end
 
   describe "seeds" do
-    test "create a sample board whose categories have different numbers of clues" do
-      Code.eval_file("priv/repo/seeds.exs")
-      Code.eval_file("priv/repo/seeds.exs")
+    test "import priv/boards, replacing on re-runs, with uneven categories" do
+      output =
+        ExUnit.CaptureIO.capture_io(fn ->
+          Code.eval_file("priv/repo/seeds.exs")
+          Code.eval_file("priv/repo/seeds.exs")
+        end)
 
-      assert [board] = Repo.all(Board)
+      assert output =~ ~s(Seeded "Sampler" in "General")
+      assert [board] = Board |> Repo.all() |> Repo.preload(:collection)
+      assert board.collection.name == Boards.default_collection_name()
       board = Boards.get_board!(board.id)
 
       clue_counts = Enum.map(board.categories, &length(&1.clues))
