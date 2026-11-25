@@ -33,6 +33,14 @@ defmodule Cluebert.DataCase do
   end
 
   @doc """
+  Returns a board name starting with `prefix` that no other test uses.
+
+  Board names are unique, and async tests inserting the same name in
+  different orders can deadlock on that index, so tests never share names.
+  """
+  def unique_board_name(prefix), do: "#{prefix} #{System.unique_integer([:positive])}"
+
+  @doc """
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do

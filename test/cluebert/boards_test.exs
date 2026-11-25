@@ -9,7 +9,7 @@ defmodule Cluebert.BoardsTest do
   defp board_attrs(overrides \\ %{}) do
     Map.merge(
       %{
-        name: "Sample",
+        name: unique_board_name("Sample"),
         categories: [
           %{title: "First", clues: [clue(1), clue(2), clue(3)]},
           %{title: "Second", clues: [clue(1)]}
@@ -21,19 +21,20 @@ defmodule Cluebert.BoardsTest do
 
   describe "list_boards/0" do
     test "lists boards by name" do
-      {:ok, _} = Boards.create_board(%{name: "Zebra"})
-      {:ok, _} = Boards.create_board(%{name: "Apple"})
+      {:ok, zebra} = Boards.create_board(%{name: unique_board_name("Zebra")})
+      {:ok, apple} = Boards.create_board(%{name: unique_board_name("Apple")})
 
-      assert Enum.map(Boards.list_boards(), & &1.name) == ["Apple", "Zebra"]
+      assert Enum.map(Boards.list_boards(), & &1.id) == [apple.id, zebra.id]
     end
   end
 
   describe "create_board/1" do
     test "creates a board with categories and clues positioned in list order" do
-      assert {:ok, %Board{id: id}} = Boards.create_board(board_attrs())
+      attrs = board_attrs()
+      assert {:ok, %Board{id: id}} = Boards.create_board(attrs)
 
       board = Boards.get_board!(id)
-      assert board.name == "Sample"
+      assert board.name == attrs.name
       assert [%{title: "First", position: 0}, %{title: "Second", position: 1}] = board.categories
 
       [first, second] = board.categories
@@ -43,7 +44,7 @@ defmodule Cluebert.BoardsTest do
 
     test "allows categories with different numbers of clues, and empty boards" do
       assert {:ok, _} = Boards.create_board(board_attrs())
-      assert {:ok, board} = Boards.create_board(%{name: "Empty"})
+      assert {:ok, board} = Boards.create_board(%{name: unique_board_name("Empty")})
       assert Boards.get_board!(board.id).categories == []
     end
 
@@ -53,8 +54,9 @@ defmodule Cluebert.BoardsTest do
     end
 
     test "rejects a duplicate name" do
-      assert {:ok, _} = Boards.create_board(board_attrs())
-      assert {:error, changeset} = Boards.create_board(board_attrs())
+      attrs = board_attrs()
+      assert {:ok, _} = Boards.create_board(attrs)
+      assert {:error, changeset} = Boards.create_board(attrs)
       assert "has already been taken" in errors_on(changeset).name
     end
 
@@ -100,7 +102,7 @@ defmodule Cluebert.BoardsTest do
 
   describe "get_board!/1" do
     test "returns categories and clues in position order, not insertion order" do
-      board = Repo.insert!(%Board{name: "Out of order"})
+      board = Repo.insert!(%Board{name: unique_board_name("Out of order")})
       later = Repo.insert!(%Category{board_id: board.id, title: "Later", position: 1})
       earlier = Repo.insert!(%Category{board_id: board.id, title: "Earlier", position: 0})
 
