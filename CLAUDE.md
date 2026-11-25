@@ -22,6 +22,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0007](docs/adr/0007-lean-scaffold.md) | Lean scaffold | Accepted, implemented |
 | [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted, implemented |
 | [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted, implemented |
+| [0010](docs/adr/0010-no-access-control-yet.md) | No access control yet | Accepted |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,
@@ -74,7 +75,7 @@ One small PR per step, each independently reviewable.
 
 ### Next
 
-Steps 1–7 are done. The next PRs, in order:
+Steps 1–8 are done; step 9 is next.
 
 5. **Collections and JSON import** (ADR 9). `Collection` schema; boards are
    unique by name within a collection, defaulting to "General".

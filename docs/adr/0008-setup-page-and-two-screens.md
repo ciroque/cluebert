@@ -77,7 +77,7 @@ needs no rule change. It does not record which team answered.
   a phone plus the TV. The player window is set up once and follows the
   host from game to game.
 - Several games can run at once, each under its own id. There is no access
-  control: anyone with a host URL can run that game.
+  control: anyone with a host URL can run that game (ADR 10).
 - `GameServer` loses `add_team/2`, `remove_team/2` and `shuffle_order/2`,
   which the UI no longer needs. `Cluebert.Game` keeps them, and its
   `:setup` phase runs inside `start_game/2`.
