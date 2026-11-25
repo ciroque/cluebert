@@ -17,6 +17,7 @@ a group playing together with no clickers.
 Play is turn-based:
 
 - Teams are defined during setup. An individual player is a team of one.
+  At least two teams are needed to start.
 - The play order is randomized (and can be re-randomized) during setup, then
   locked when the game starts.
 - The current team selects any clue that has not been answered.

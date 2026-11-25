@@ -13,7 +13,8 @@ defmodule CluebertWeb.Router do
   scope "/", CluebertWeb do
     pipe_through :browser
 
-    live "/", HomeLive
+    live "/", SetupLive
+    live "/games/:id/host", HostLive
   end
 
   # LiveDashboard is dev-only; it has no authentication.

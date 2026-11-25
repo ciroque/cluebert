@@ -12,6 +12,14 @@ defmodule Cluebert.Boards do
   alias Cluebert.Boards.Board
 
   @doc """
+  Lists all boards by name, without their categories or clues.
+  """
+  @spec list_boards() :: [Board.t()]
+  def list_boards do
+    Repo.all(from b in Board, order_by: [asc: b.name])
+  end
+
+  @doc """
   Creates a board together with its categories and clues.
 
   Categories and clues are given as nested lists; each one's position comes
