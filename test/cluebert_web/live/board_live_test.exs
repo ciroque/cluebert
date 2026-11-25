@@ -117,6 +117,16 @@ defmodule CluebertWeb.BoardLiveTest do
 
       assert_redirect(view, "/games/the-next-game")
     end
+
+    test "says so when the game stops", %{view: view, id: id} do
+      [{pid, _}] = Registry.lookup(Cluebert.GameRegistry, id)
+      ref = Process.monitor(pid)
+      stop_supervised!(GameServer)
+      assert_receive {:DOWN, ^ref, :process, ^pid, _}
+
+      assert has_element?(view, "#game-missing")
+      refute has_element?(view, "#board")
+    end
   end
 
   describe "an unknown game" do

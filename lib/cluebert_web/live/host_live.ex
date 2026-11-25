@@ -11,6 +11,8 @@ defmodule CluebertWeb.HostLive do
 
   Every change goes through `Cluebert.GameServer`; this view renders what it
   returns and what it broadcasts, so it stays in sync with other screens.
+  If the game stops (a finished game stops after an hour), the host is sent
+  back to setup.
   """
   use CluebertWeb, :live_view
 
@@ -22,15 +24,14 @@ defmodule CluebertWeb.HostLive do
   def mount(%{"id" => id}, _session, socket) do
     case GameServer.get(id) do
       {:ok, %{game: game, board: board}} ->
-        if connected?(socket), do: GameServer.subscribe(id)
-
         {:ok,
          socket
          |> assign(:page_title, "Host · #{board.name}")
          |> assign(:game_id, id)
          |> assign(:board, board)
          |> assign(:clues, clues_by_id(board))
-         |> assign(:game, game)}
+         |> assign(:game, game)
+         |> watch(id)}
 
       {:error, :not_found} ->
         {:ok, game_gone(socket)}
@@ -156,6 +157,24 @@ defmodule CluebertWeb.HostLive do
   @impl true
   def handle_info({:game_updated, id, game}, %{assigns: %{game_id: id}} = socket) do
     {:noreply, assign(socket, :game, game)}
+  end
+
+  def handle_info({:DOWN, _ref, :process, _pid, _reason}, socket) do
+    {:noreply, game_gone(socket)}
+  end
+
+  # Subscribe before monitoring, so no update falls between the two.
+  defp watch(socket, id) do
+    if connected?(socket) do
+      :ok = GameServer.subscribe(id)
+
+      case GameServer.monitor(id) do
+        {:ok, _ref} -> socket
+        {:error, :not_found} -> game_gone(socket)
+      end
+    else
+      socket
+    end
   end
 
   defp apply_result(socket, {:ok, game}), do: assign(socket, :game, game)
