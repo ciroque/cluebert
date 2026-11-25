@@ -14,6 +14,8 @@ config :cluebert, CluebertWeb.Endpoint,
   force_ssl: [
     rewrite_on: [:x_forwarded_proto],
     exclude: [
+      # Kubernetes probes call the pod directly over plain HTTP.
+      paths: ["/health"],
       hosts: ["localhost", "127.0.0.1", "0.0.0.0"]
     ]
   ]
