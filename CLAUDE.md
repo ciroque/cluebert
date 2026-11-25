@@ -23,6 +23,7 @@ the relevant ones before changing behavior, and link to them from PRs.
 | [0008](docs/adr/0008-setup-page-and-two-screens.md) | One setup page, then two screens per game | Accepted, implemented |
 | [0009](docs/adr/0009-collections-json-import-and-board-management.md) | Boards are grouped into collections, imported from JSON, and managed in the app | Accepted, implemented |
 | [0010](docs/adr/0010-no-access-control-yet.md) | No access control yet | Accepted |
+| [0011](docs/adr/0011-single-pod-on-the-existing-cluster.md) | Deployed with Helm to the existing cluster, as exactly one pod | Accepted, implemented |
 
 If a change would contradict an ADR, stop and say so instead of working around
 it. New decisions get a new ADR (Nygard format: Status, Context, Decision,
@@ -75,7 +76,7 @@ One small PR per step, each independently reviewable.
 
 ### Next
 
-Steps 1–8 are done; step 9 is next.
+Steps 1–9 are done. Deployment is described in `charts/cluebert/README.md`.
 
 5. **Collections and JSON import** (ADR 9). `Collection` schema; boards are
    unique by name within a collection, defaulting to "General".
@@ -98,7 +99,8 @@ Steps 1–8 are done; step 9 is next.
    make us revisit it.
 9. **Helm chart** for the existing Kubernetes cluster, following the
    charts in the sibling repos. Exactly one replica, because game state is
-   in memory (ADR 4).
+   in memory (ADR 4). ADR 11, a Dockerfile, an image workflow, release
+   tasks and a `/health` endpoint.
 
 ## Working agreements
 

@@ -7,7 +7,12 @@ To start your Phoenix server:
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-Ready to run in production? Please [check our deployment guides](https://phoenix.hexdocs.pm/deployment.html).
+## Deploying
+
+Cluebert runs as a single pod in Kubernetes, from the Helm chart in
+[`charts/cluebert`](charts/cluebert/README.md); see ADR 11. The image is
+built from the `Dockerfile` by the *Build image* workflow when a PR is
+merged into main.
 
 ## Learn more
 
