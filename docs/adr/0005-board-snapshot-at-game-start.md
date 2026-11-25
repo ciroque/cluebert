@@ -4,8 +4,8 @@ Date: 2026-11-25
 
 ## Status
 
-Accepted. `Cluebert.Game` side implemented (PR #1); loading from the database
-is not yet implemented.
+Accepted. `Cluebert.Game` side implemented (PR #1); loading the board when a
+game starts implemented in `Cluebert.GameServer.start_game/1` (PR #5).
 
 ## Context
 

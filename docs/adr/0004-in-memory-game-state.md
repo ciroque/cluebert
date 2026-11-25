@@ -4,7 +4,9 @@ Date: 2026-11-25
 
 ## Status
 
-Accepted. Not yet implemented (`GameServer`).
+Accepted. Implemented in `lib/cluebert/game_server.ex` (PR #5). Game
+processes are `:temporary`, so a crashed game is gone rather than restarted
+empty.
 
 ## Context
 
