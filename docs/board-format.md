@@ -72,8 +72,8 @@ collection and board names.
 - Development: `mix cluebert.import path/to/file.json [more.json ...] [--replace]`
 - Seeds: every `*.json` file in `priv/boards/` is imported, with replace, by
   `mix run priv/repo/seeds.exs`.
-- In the deployed app: the upload page in board management (coming with the
-  management UI).
+- In the app: `/boards/import` (Boards → Import JSON). Paste JSON or choose
+  `.json` files, with an option to replace existing boards.
 
 ## Errors
 
