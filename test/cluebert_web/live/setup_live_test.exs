@@ -55,6 +55,25 @@ defmodule CluebertWeb.SetupLiveTest do
       refute has_element?(view, "#collection-#{general.id} #board-#{plants.id}")
     end
 
+    test "chooses the board after the one just played, wrapping around", %{conn: conn} do
+      collection = Cluebert.DataCase.unique_collection()
+      [first, second] = for name <- ["Lesson 1", "Lesson 2"], do: create_board(name, collection)
+
+      for {played, expected} <- [{first, second}, {second, first}] do
+        id = "played-#{played.id}"
+
+        start_supervised!(
+          {GameServer, id: id, board: Boards.get_board!(played.id), team_names: ["Red", "Blue"]},
+          id: id
+        )
+
+        {:ok, view, _html} = live(conn, ~p"/?from=#{id}")
+
+        assert has_element?(view, "#board-#{expected.id}[aria-pressed=true]")
+        assert has_element?(view, "#board-#{played.id}[aria-pressed=false]")
+      end
+    end
+
     test "choosing a board selects it", %{conn: conn} do
       apple = create_board("Apple")
       zebra = create_board("Zebra")
