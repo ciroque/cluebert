@@ -74,8 +74,9 @@ defmodule CluebertWeb.HostLiveTest do
       assert has_element?(view, "#clue-#{a1.id}[data-state=open]")
       assert has_element?(view, "#open-clue-prompt", "A one")
       assert has_element?(view, "#open-clue-response", "Answer A1")
-      assert has_element?(view, "#clue-#{a1.id} #judge-correct")
-      assert has_element?(view, "#clue-#{a1.id} #judge-wrong")
+      assert has_element?(view, "#open-clue #judge-correct", "Correct")
+      assert has_element?(view, "#open-clue #judge-incorrect", "Incorrect")
+      refute has_element?(view, "#clue-#{a1.id} button")
       assert has_element?(view, "#clue-#{a2.id}[data-state=locked][disabled]")
     end
 
@@ -91,11 +92,11 @@ defmodule CluebertWeb.HostLiveTest do
       refute has_element?(view, "#open-clue")
     end
 
-    test "wrong leaves the clue on the board and passes the turn", ctx do
+    test "incorrect leaves the clue on the board and passes the turn", ctx do
       %{view: view, a1: a1, red: red, blue: blue} = ctx
 
       select(view, a1)
-      judge(view, "wrong")
+      judge(view, "incorrect")
 
       assert has_element?(view, "#clue-#{a1.id}[data-state=available]")
       assert has_element?(view, "#team-#{blue}[aria-current=true]")
@@ -106,7 +107,7 @@ defmodule CluebertWeb.HostLiveTest do
       %{view: view, a1: a1, a2: a2, b1: b1, red: red, blue: blue} = ctx
 
       select(view, a1)
-      judge(view, "wrong")
+      judge(view, "incorrect")
 
       for clue <- [a2, b1, a1] do
         select(view, clue)

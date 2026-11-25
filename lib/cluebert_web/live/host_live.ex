@@ -4,7 +4,7 @@ defmodule CluebertWeb.HostLive do
 
   Shows the board, the play order with scores, and the current team. The
   host clicks the clue the current team calls out (ADR 2), sees its prompt
-  and response, and marks it Correct or Wrong on the tile (ADR 3). End Game
+  and response, and marks it Correct or Incorrect (ADR 3). End Game
   is always available until the game is over.
 
   Every change goes through `Cluebert.GameServer`; this view renders what it
@@ -96,7 +96,24 @@ defmodule CluebertWeb.HostLive do
         <p id="open-clue-response" class="mt-1 text-lg text-emerald-800">
           {@clues[@game.open_clue].response}
         </p>
-        <p class="mt-4 text-sm text-zinc-500">Mark the response on the highlighted tile.</p>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            id="judge-correct"
+            phx-click="judge"
+            phx-value-result="correct"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-500"
+          >
+            <.icon name="hero-check" class="size-5" /> Correct
+          </button>
+          <button
+            id="judge-incorrect"
+            phx-click="judge"
+            phx-value-result="incorrect"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-500"
+          >
+            <.icon name="hero-x-mark" class="size-5" /> Incorrect
+          </button>
+        </div>
       </section>
 
       <div
@@ -176,27 +193,9 @@ defmodule CluebertWeb.HostLive do
       :if={@state == :open}
       id={"clue-#{@clue.id}"}
       data-state="open"
-      class="flex min-h-20 flex-col items-center justify-center gap-2 rounded-lg bg-blue-600 p-2 text-white ring-4 ring-blue-300"
+      class="flex min-h-20 items-center justify-center rounded-lg bg-blue-600 text-2xl font-bold text-white tabular-nums ring-4 ring-blue-300"
     >
-      <span class="text-lg font-bold tabular-nums">{@clue.value}</span>
-      <div class="flex gap-2">
-        <button
-          id="judge-correct"
-          phx-click="judge"
-          phx-value-result="correct"
-          class="inline-flex cursor-pointer items-center gap-1 rounded-md bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white transition-colors hover:bg-emerald-400"
-        >
-          <.icon name="hero-check" class="size-4" /> Correct
-        </button>
-        <button
-          id="judge-wrong"
-          phx-click="judge"
-          phx-value-result="wrong"
-          class="inline-flex cursor-pointer items-center gap-1 rounded-md bg-red-500 px-2.5 py-1 text-xs font-semibold text-white transition-colors hover:bg-red-400"
-        >
-          <.icon name="hero-x-mark" class="size-4" /> Wrong
-        </button>
-      </div>
+      {@clue.value}
     </div>
 
     <button
@@ -226,7 +225,7 @@ defmodule CluebertWeb.HostLive do
     judgment =
       case result do
         "correct" -> :correct
-        "wrong" -> :wrong
+        "incorrect" -> :wrong
         _ -> :invalid
       end
 
