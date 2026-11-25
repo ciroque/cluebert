@@ -27,10 +27,22 @@ defmodule Cluebert.Boards.Category do
   """
   def changeset(category, attrs, position) do
     category
-    |> cast(attrs, [:title])
+    |> title_changeset(attrs)
     |> put_change(:position, position)
-    |> validate_required([:title, :position])
-    |> unique_constraint([:board_id, :position])
+    |> validate_required([:position])
     |> cast_assoc(:clues, with: &Clue.changeset/3)
+  end
+
+  @doc """
+  Builds a changeset for a category's title only. The title is trimmed.
+  Position and clues are left alone; the board editor moves categories with
+  `Cluebert.Boards.move_category/2`.
+  """
+  def title_changeset(category, attrs) do
+    category
+    |> cast(attrs, [:title])
+    |> update_change(:title, &(&1 && String.trim(&1)))
+    |> validate_required([:title])
+    |> unique_constraint([:board_id, :position])
   end
 end
