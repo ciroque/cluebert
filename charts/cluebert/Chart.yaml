@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cluebert
+description: Cluebert, a turn-based trivia game for one room, on Phoenix LiveView
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

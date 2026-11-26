@@ -22,6 +22,11 @@ defmodule CluebertWeb.Router do
     live "/games/:id", BoardLive
   end
 
+  # Probes (see CluebertWeb.HealthController); no session or CSRF needed.
+  scope "/", CluebertWeb do
+    get "/health", HealthController, :show
+  end
+
   # LiveDashboard is dev-only; it has no authentication.
   if Application.compile_env(:cluebert, :dev_routes) do
     import Phoenix.LiveDashboard.Router

@@ -25,6 +25,8 @@ in progress is written to the database.
 
 - If the server process or node goes down, the game in progress is lost.
 - No event schema, replay or recovery code.
+- The deployment runs exactly one pod and replaces it with `Recreate`
+  (ADR 11), so every upgrade ends the games in progress.
 - Finished games must not stay in memory forever. They stop an hour after
   they end: long enough for New game to read their teams and hand the player
   screen on (ADR 8), and then they are gone.

@@ -1,0 +1,92 @@
+# Default values for the cluebert chart. See README.md for an install
+# command; secrets are passed with --set, never committed.
+#
+# There is no replicaCount and no autoscaling: games live only in the pod's
+# memory (ADR 4), so the Deployment always runs exactly one pod and
+# replaces it with the Recreate strategy.
+
+image:
+  repository: ghcr.io/ciroque/cluebert
+  pullPolicy: IfNotPresent
+  # Required. The image digest (sha256:...) from the Build image workflow.
+  digest: ""
+
+imagePullSecrets:
+  - name: ghcr-package-read
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  # The image's "app" user.
+  runAsUser: 1000
+  runAsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 4000
+
+# The public host name. Used for the ingress rule, its TLS certificate and
+# PHX_HOST, which LiveView checks WebSocket origins against.
+host: cluebeth.stochatica.xyz
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+  tlsSecretName: cluebert-tls
+
+certificate:
+  enabled: true
+  issuerName: letsencrypt-dns
+  issuerKind: ClusterIssuer
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Applies pending Ecto migrations from the new image in a Job.
+# pre-upgrade runs before the Deployment is replaced, from a hook Secret
+# rendered with this upgrade's values. post-install covers a first install,
+# after the release Secret exists; the pod may start before that Job
+# finishes. helm --timeout must stay longer than activeDeadlineSeconds.
+migrate:
+  enabled: true
+  backoffLimit: 1
+  activeDeadlineSeconds: 600
+  # On a first install only, also import priv/boards/*.json (the Sampler
+  # board). Upgrades never seed, so edits made in the app are kept.
+  seedOnInstall: true
+
+app:
+  # Required. Generate one with: mix phx.gen.secret
+  secretKeyBase: ""
+  database:
+    # Required, except port.
+    hostname: ""
+    port: 5432
+    name: cluebert
+    username: ""
+    password: ""
+  poolSize: 10

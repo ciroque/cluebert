@@ -1,0 +1,33 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "cluebert.fullname" . -}}
+{{- $host := include "cluebert.host" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "cluebert.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  tls:
+    - hosts:
+        - {{ $host | quote }}
+      secretName: {{ .Values.ingress.tlsSecretName }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  name: http
+{{- end }}

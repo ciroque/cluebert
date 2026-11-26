@@ -13,9 +13,9 @@ config :cluebert, CluebertWeb.Endpoint, cache_static_manifest: "priv/static/cach
 config :cluebert, CluebertWeb.Endpoint,
   force_ssl: [
     rewrite_on: [:x_forwarded_proto],
-    exclude: [
-      hosts: ["localhost", "127.0.0.1", "0.0.0.0"]
-    ]
+    # Kubernetes probes call the pod directly over plain HTTP. Everything
+    # else, including requests to localhost, is redirected to HTTPS.
+    exclude: [paths: ["/health"]]
   ]
 
 # Do not print debug messages in production
