@@ -14,13 +14,26 @@ upgrade between game sessions. Boards are in Postgres and are kept.
 1. **An image.** The *Build image* workflow pushes
    `ghcr.io/ciroque/cluebert` when a PR is merged into main, or when run
    by hand. Its run summary shows the digest to deploy.
-2. **A database.** Create an empty `cluebert` database (or the name you
-   pass as `app.database.name`) on the cluster's Postgres. The migrate Job
-   creates the tables but not the database:
+2. **A database and its roles.** As `postgres`, run
+   [`sql/create_roles.sql`](sql/create_roles.sql). It creates the database
+   and two roles, so nothing connects as `postgres`:
+
+   - `clueberth_rw`, which the app uses: it owns the database and its
+     `public` schema, so the migrate Job can create tables.
+   - `clueberth_r`, read-only, for people and tools. The app never uses it.
+
+   The passwords come from the environment, never the command line:
 
    ```bash
-   psql -h "$DB_HOST" -U "$DB_USERNAME" -c 'create database cluebert'
+   export CLUEBERTH_RW_PASSWORD=...   # also passed to helm below
+   export CLUEBERTH_R_PASSWORD=...
+   psql -h "$DB_HOST" -U postgres -d postgres -X -f charts/cluebert/sql/create_roles.sql
    ```
+
+   It is safe to re-run, and each run resets both passwords from the
+   environment, which is how to rotate one (then `helm upgrade`). Set
+   `CLUEBERTH_DB_NAME` if you use another `app.database.name`. It needs
+   psql 15 or later.
 
 3. **A pull secret**, if the ghcr package is private: a
    `docker-registry` Secret named `ghcr-package-read` in the release's
@@ -42,8 +55,8 @@ helm upgrade --install cluebert ./charts/cluebert \
   --set image.digest="$DIGEST" \
   --set app.secretKeyBase="$CLUEBERT_SECRET_KEY_BASE" \
   --set app.database.hostname="$DB_HOST" \
-  --set app.database.username="$DB_USERNAME" \
-  --set app.database.password="$DB_PASSWORD" \
+  --set app.database.username=clueberth_rw \
+  --set app.database.password="$CLUEBERTH_RW_PASSWORD" \
   --timeout 12m \
   -n cluebert \
   --create-namespace
@@ -105,7 +118,7 @@ The database is not touched.
 | `app.database.hostname` | Postgres host. **Required** | `""` |
 | `app.database.port` | Postgres port | `5432` |
 | `app.database.name` | Database name | `cluebert` |
-| `app.database.username` | Database user. **Required** | `""` |
+| `app.database.username` | Database user, `clueberth_rw` from `sql/create_roles.sql`. **Required** | `""` |
 | `app.database.password` | Database password. **Required** | `""` |
 | `app.poolSize` | Database connection pool size | `10` |
 | `migrate.enabled` | Run the migrate Job on install and upgrade | `true` |

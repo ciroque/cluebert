@@ -38,6 +38,12 @@ connect to different pods.
 `/health`, which never queries Postgres. A database outage should not
 restart the pod and end every game in it.
 
+**The app doesn't connect as `postgres`.** `charts/cluebert/sql/create_roles.sql`,
+run once by an admin, creates the database and a `clueberth_rw` role that
+owns it, which the app and the migrate Job use, plus a read-only
+`clueberth_r` role for people and tools. Roles are server-wide and need a
+superuser to create, so this is not an Ecto migration.
+
 **Seed once.** A first install imports the boards in `priv/boards/`.
 Upgrades only migrate, so boards edited in the app are not overwritten.
 
