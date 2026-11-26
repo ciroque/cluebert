@@ -26,7 +26,9 @@ upgrade between game sessions. Boards are in Postgres and are kept.
    `docker-registry` Secret named `ghcr-package-read` in the release's
    namespace (`imagePullSecrets` in `values.yaml`), as the sibling apps
    use.
-4. **DNS** for the host name, pointing at the cluster's Traefik.
+4. **DNS** for `cluebeth.stochatica.xyz` (the `host` value), pointing at
+   the cluster's Traefik. The certificate is issued by `letsencrypt-dns`,
+   which must be able to answer DNS challenges for `stochatica.xyz`.
 
 ## Install or upgrade
 
@@ -37,7 +39,6 @@ source ~/.config/devenvs/secret-key-bases.env
 export DIGEST=<digest from the Build image run>
 
 helm upgrade --install cluebert ./charts/cluebert \
-  --set host=cluebert.example.com \
   --set image.digest="$DIGEST" \
   --set app.secretKeyBase="$CLUEBERT_SECRET_KEY_BASE" \
   --set app.database.hostname="$DB_HOST" \
@@ -88,7 +89,7 @@ The database is not touched.
 
 | Value | Description | Default |
 | --- | --- | --- |
-| `host` | Public host name: ingress rule, certificate and `PHX_HOST`. **Required** | `""` |
+| `host` | Public host name: ingress rule, certificate and `PHX_HOST` | `cluebeth.stochatica.xyz` |
 | `image.repository` | Image repository | `ghcr.io/ciroque/cluebert` |
 | `image.digest` | Image digest (`sha256:...`). **Required** | `""` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |

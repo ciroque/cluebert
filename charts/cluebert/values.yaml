@@ -38,7 +38,7 @@ service:
 
 # The public host name. Used for the ingress rule, its TLS certificate and
 # PHX_HOST, which LiveView checks WebSocket origins against.
-host: ""
+host: cluebeth.stochatica.xyz
 
 ingress:
   enabled: true

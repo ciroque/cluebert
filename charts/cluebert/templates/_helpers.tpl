@@ -49,7 +49,7 @@ The image, pinned by digest.
 {{- end }}
 
 {{- define "cluebert.host" -}}
-{{- required "host is required, e.g. --set host=cluebert.example.com" .Values.host -}}
+{{- required "host is required, e.g. --set host=cluebeth.stochatica.xyz" .Values.host -}}
 {{- end }}
 
 {{- define "cluebert.migrateSecretName" -}}
